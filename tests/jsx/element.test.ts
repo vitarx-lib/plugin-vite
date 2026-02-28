@@ -67,7 +67,7 @@ describe('children 属性与子元素冲突', () => {
     const result = await compile(code)
     // children 属性不使用 unref，直接引用
     // 原因：children 中的 ref 是合法的可变渲染源
-    expect(result).toContain('children: test')
+    expect(result).toContain('"children": test')
     expect(result).not.toContain('unref')
   })
 

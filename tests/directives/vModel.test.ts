@@ -89,7 +89,7 @@ describe('v-model 指令', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Input, {
-        placeholder: "test",
+        "placeholder": "test",
         get modelValue() {
           return unref(value);
         },

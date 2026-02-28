@@ -60,7 +60,7 @@ describe('Import 自动注入', () => {
       const createView = () => {};
       const unref = () => {};
       const App = () => /* @__PURE__ */createView$1("div", {
-        get className() {
+        get "className"() {
           return unref$1(className);
         }
       });"

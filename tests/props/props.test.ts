@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { compile } from '../utils'
 
 describe('Props getter 行为', () => {
@@ -8,7 +8,7 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        className: "test"
+        "className": "test"
       });"
     `)
   })
@@ -19,7 +19,7 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        count: 42
+        "count": 42
       });"
     `)
   })
@@ -30,7 +30,7 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        disabled: true
+        "disabled": true
       });"
     `)
   })
@@ -41,7 +41,7 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get className() {
+        get "className"() {
           return unref(className);
         }
       });"
@@ -54,11 +54,20 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get className() {
+        get "className"() {
           return props.className;
         }
       });"
     `)
+  })
+  it('中划线属性名支持', async () => {
+    const code = `const App = () => <div data-id={props.className}></div>`
+    expect(await compile(code)).toMatchInlineSnapshot(`"import { createView } from "vitarx";
+const App = () => /* @__PURE__ */createView("div", {
+  get \"data-id\"() {
+    return props.className;
+  }
+});"`)
   })
 
   it('复杂表达式属性生成 getter', async () => {
@@ -67,7 +76,7 @@ describe('Props getter 行为', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get className() {
+        get "className"() {
           return a + b;
         }
       });"
@@ -105,7 +114,7 @@ describe('ref 变量优化', () => {
       "import { ref, createView } from 'vitarx';
       const count = ref(0);
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return count.value;
         }
       });"
@@ -119,7 +128,7 @@ describe('ref 变量优化', () => {
       "import { toRef, createView } from 'vitarx';
       const count = toRef(props, 'count');
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return count.value;
         }
       });"
@@ -133,7 +142,7 @@ describe('ref 变量优化', () => {
       "import { shallowRef, createView } from 'vitarx';
       const count = shallowRef(0);
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return count.value;
         }
       });"
@@ -147,7 +156,7 @@ describe('ref 变量优化', () => {
       "import { computed, createView } from 'vitarx';
       const double = computed(() => count.value * 2);
       const App = () => /* @__PURE__ */createView("div", {
-        get double() {
+        get "double"() {
           return double.value;
         }
       });"
@@ -161,7 +170,7 @@ describe('ref 变量优化', () => {
       "import { ref as r, createView } from 'vitarx';
       const count = r(0);
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return count.value;
         }
       });"
@@ -176,7 +185,7 @@ describe('ref 变量优化', () => {
       import { ref } from '@vitarx/responsive';
       const count = ref(0);
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return count.value;
         }
       });"
@@ -190,7 +199,7 @@ describe('ref 变量优化', () => {
       "import { createView, unref } from "vitarx";
       const count = someOtherApi(0);
       const App = () => /* @__PURE__ */createView("div", {
-        get count() {
+        get "count"() {
           return unref(count);
         }
       });"
@@ -207,10 +216,10 @@ describe('ref 变量优化', () => {
         b
       } = toRefs(props);
       const App = () => /* @__PURE__ */createView("div", {
-        get a() {
+        get "a"() {
           return a.value;
         },
-        get b() {
+        get "b"() {
           return b.value;
         }
       });"
@@ -226,7 +235,7 @@ describe('ref 变量优化', () => {
         a
       } = t(props);
       const App = () => /* @__PURE__ */createView("div", {
-        get a() {
+        get "a"() {
           return a.value;
         }
       });"
@@ -246,10 +255,10 @@ describe('ref 变量优化', () => {
         b: ref(2)
       };
       const App = () => /* @__PURE__ */createView("div", {
-        get a() {
+        get "a"() {
           return unref(a);
         },
-        get b() {
+        get "b"() {
           return unref(b);
         }
       });"
