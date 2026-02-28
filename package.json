@@ -17,7 +17,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release": "release-cli"
   },
   "files": [
     "dist",
