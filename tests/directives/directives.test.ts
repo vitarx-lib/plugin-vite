@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { compile } from '../utils'
 
 describe('指令转换', () => {
@@ -28,6 +28,19 @@ describe('指令转换', () => {
         get value() {
           return unref(disabled);
         }
+      }]]);"
+    `)
+  })
+  it('带参数指令', async () => {
+    const code = `const App = () => <div v-test:t={visible}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, withDirectives, unref } from "vitarx";
+      const App = () => /* @__PURE__ */withDirectives(createView("div"), [["test", {
+        get value() {
+          return unref(visible);
+        },
+        arg: "t"
       }]]);"
     `)
   })

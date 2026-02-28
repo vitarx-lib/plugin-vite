@@ -6,7 +6,7 @@
 import * as t from '@babel/types'
 import { TransformContext } from '../../context.js'
 import { processAttribute, processSpreadAttribute } from './attribute.js'
-import type { PropsResult, VModelState } from './types.js'
+import type { DirectiveInfo, PropsResult, VModelState } from './types.js'
 import { createVModelProps, extractVModelState } from './vmodel.js'
 
 // 导出类型定义
@@ -49,7 +49,7 @@ export function processProps(
 ): PropsResult {
   const attributes = node.openingElement.attributes
   const properties: (t.ObjectProperty | t.ObjectMethod | t.SpreadElement)[] = []
-  const directives = new Map<string, t.Expression>()
+  const directives = new Map<string, DirectiveInfo>()
   let hasVBind = false
 
   // 追踪已存在的属性名（用于 v-model 冲突检测）
@@ -89,7 +89,7 @@ export function processProps(
         }
         // 其他指令：添加到指令映射
         else {
-          directives.set(result.name, result.value)
+          directives.set(result.name, { value: result.value, arg: result.arg })
         }
       } else if (result.type === 'property') {
         properties.push(result.property)

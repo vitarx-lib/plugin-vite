@@ -96,7 +96,7 @@ export function processAttribute(
 
 /**
  * 处理命名空间属性
- * 支持 v:xxx 格式的指令语法
+ * 
  * @param attr - JSX 属性节点
  * @param attrName - 命名空间名称
  * @param existingPropNames - 已存在的属性名集合
@@ -112,11 +112,11 @@ function processNamespacedAttribute(
   const namespace = attrName.namespace.name
   const name = attrName.name.name
   const fullName = `${namespace}:${name}`
+  const value = getAttributeValue(attr.value)
 
-  // v:xxx 指令
+  // v:xxx 指令 (如 v:bind, v:show)
   if (namespace === 'v') {
     const directiveName = `v-${name}`
-    const value = getAttributeValue(attr.value)
 
     // v:bind 等同于 v-bind
     if (directiveName === 'v-bind') {
@@ -129,9 +129,25 @@ function processNamespacedAttribute(
     }
   }
 
+  // v-xxx:arg 格式的带参数指令 (如 v-test:t)
+  if (namespace.startsWith('v-')) {
+    const directiveName = namespace
+
+    // 排除 v-if 系列和 v-model
+    if (!['v-if', 'v-else-if', 'v-else', 'v-model', 'v-bind'].includes(directiveName)) {
+      return {
+        type: 'directive',
+        name: directiveName,
+        value,
+        isVBind: false,
+        isVModel: false,
+        arg: name
+      }
+    }
+  }
+
   // 其他命名空间属性作为普通属性处理
   existingPropNames.add(fullName)
-  const value = getAttributeValue(attr.value)
   const property = createProperty(fullName, value, ctx)
   return { type: 'property', property }
 }

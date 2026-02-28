@@ -5,13 +5,23 @@
 import * as t from '@babel/types'
 
 /**
+ * 指令信息
+ */
+export interface DirectiveInfo {
+  /** 指令值表达式 */
+  value: t.Expression
+  /** 指令参数 (如 v-test:t 中的 t) */
+  arg?: string
+}
+
+/**
  * Props 处理结果
  */
 export interface PropsResult {
   /** 处理后的 props 对象表达式，无属性时为 null */
   props: t.ObjectExpression | null
-  /** 指令映射表，key 为指令名，value 为指令值表达式 */
-  directives: Map<string, t.Expression>
+  /** 指令映射表，key 为指令名，value 为指令信息 */
+  directives: Map<string, DirectiveInfo>
   /** 是否包含 v-bind 展开属性 */
   hasVBind: boolean
 }
@@ -34,5 +44,12 @@ export interface VModelState {
  * - property: 普通属性
  */
 export type AttributeResult =
-  | { type: 'directive'; name: string; value: t.Expression; isVBind: boolean; isVModel: boolean }
+  | {
+      type: 'directive'
+      name: string
+      value: t.Expression
+      isVBind: boolean
+      isVModel: boolean
+      arg?: string
+    }
   | { type: 'property'; property: t.ObjectProperty | t.ObjectMethod }
