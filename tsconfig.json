@@ -5,6 +5,8 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     // 不生成 .js.map
     "sourceMap": false,
+    // 生成 .d.ts
+    "declaration": true,
     // 确保换行符一致性
     "newLine": "LF",
     // 开启严格模式（可选）
