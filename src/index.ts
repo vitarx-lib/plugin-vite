@@ -1,5 +1,5 @@
 import path from 'node:path'
-import type { Plugin } from 'vite'
+import { type Plugin, type ResolvedConfig, transformWithOxc } from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 
 // 编译宏组件类型导出
@@ -29,6 +29,7 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
   let compileOptions: CompileOptions
   let isDEV = false
   let isSSR = false
+  let viteConfig:ResolvedConfig
   return {
     name: 'vite-plugin-vitarx',
     config(config, env) {
@@ -36,8 +37,9 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       const configSSR = !!config.build?.ssr
       isSSR = env.isSsrBuild === true || configSSR
       return {
-        esbuild: {
-          jsx: 'preserve'
+        oxc:{
+          jsx:'preserve',
+          exclude: /\.[jt]sx$/,
         },
         define: {
           __VITARX_DEV__: JSON.stringify(isDEV),
@@ -51,6 +53,7 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       }
     },
     configResolved(config) {
+      viteConfig = config
       const sourcemap = config.build.sourcemap
       compileOptions = {
         dev: isDEV,
@@ -61,7 +64,13 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       }
     },
     async transform(code, id) {
-      return await transform(code, id, compileOptions!)
+      const result = await transform(code, id, compileOptions!)
+      if (result){
+       return await transformWithOxc(result.code, id, {
+          jsx: 'preserve'
+        },result.map,viteConfig!)
+      }
+      return result
     }
   }
 }

@@ -162,8 +162,8 @@ function generateCode(
 ): TransformResult {
   const babelGenerate: typeof generate =
     typeof generate === 'object' ? (generate as any).default : generate
-  const output = babelGenerate(ast, { sourceMaps: sourceMap !== false, filename: id }, code)
-  return { code: output.code, map: output.map }
+  const output = babelGenerate(ast, { sourceMaps: !!sourceMap, filename: id }, code)
+  return { code: output.code, map: output.map || undefined }
 }
 
 /**
