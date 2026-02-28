@@ -1,4 +1,4 @@
-## 0.0.1-alpha.0 (2026-02-28)
+## [0.0.1-alpha.1](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-alpha.0...v0.0.1-alpha.1) (2026-02-28)
 
 
 ### Features
