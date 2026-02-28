@@ -54,13 +54,12 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
     },
     configResolved(config) {
       viteConfig = config
-      const sourcemap = config.build.sourcemap
       compileOptions = {
         dev: isDEV,
         ssr: isSSR,
         hmr: isDEV && !isSSR,
         runtimeModule: 'vitarx',
-        sourceMap: sourcemap === 'inline' ? 'inline' : sourcemap === true ? 'both' : false
+        sourceMap: false
       }
     },
     async transform(code, id) {
@@ -68,9 +67,9 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       if (result){
        return await transformWithOxc(result.code, id, {
           jsx: 'preserve'
-        },result.map,viteConfig!)
+        },this.getCombinedSourcemap(),viteConfig!)
       }
-      return result
+      return null
     }
   }
 }
