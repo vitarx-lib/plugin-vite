@@ -99,7 +99,7 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
   if (isLogicalExpression(node)) {
     markImport(ctx, 'dynamic')
     const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    const locInfo = node.loc ? createLocationObject(ctx.filename, node.loc) : null
+    const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
     return addPureComment(createDynamicCall(node, dynamicAlias, locInfo))
   }
 
@@ -136,7 +136,7 @@ function processChildExpression(
   if (isLogicalExpression(expr)) {
     markImport(ctx, 'dynamic')
     const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    const locInfo = loc ? createLocationObject(ctx.filename, loc) : null
+    const locInfo = ctx.options.dev && loc ? createLocationObject(ctx.filename, loc) : null
     return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo))
   }
 
@@ -157,8 +157,8 @@ function processConditionalExpression(
   const processedConsequent = processChildNode(consequent, ctx) || t.nullLiteral()
   const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
 
-  // 获取位置信息
-  const locInfo = node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  // 获取位置信息（仅开发环境）
+  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
 
   // 使用公共的 createBinaryBranch
   return createBinaryBranch(test, processedConsequent, processedAlternate, ctx, locInfo)

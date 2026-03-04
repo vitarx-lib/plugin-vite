@@ -39,8 +39,8 @@ export function processSwitch(path: NodePath<t.JSXElement>, ctx: TransformContex
     branches.push(createArrowFunction(fallbackValue))
   }
 
-  // 获取位置信息
-  const locInfo = path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
+  // 获取位置信息（仅开发环境）
+  const locInfo = ctx.options.dev && path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
 
   // 生成 branch 调用
   // Switch 的 when 条件如果是标识符，需要 unref

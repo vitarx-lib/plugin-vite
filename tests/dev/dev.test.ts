@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile, devOptions } from '../utils'
+import { compile, defaultOptions, devOptions } from '../utils'
 
 describe('Dev 位置信息', () => {
   it('dev 模式注入位置信息', async () => {
@@ -74,5 +74,65 @@ export default function DynamicList(): View {
     expect(result).toContain('lineNumber: 7')
     // For 应该在第 8 行
     expect(result).toContain('lineNumber: 8')
+  })
+
+  it('dev 模式 branch 调用注入位置信息', async () => {
+    const code = `const App = () => <div v-if={show}>visible</div>`
+    const result = await compile(code, devOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, branch, unref } from "vitarx";
+      const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
+        children: "visible"
+      }, {
+        fileName: "/test.tsx",
+        lineNumber: 1,
+        columnNumber: 19
+      })], {
+        fileName: "/test.tsx",
+        lineNumber: 1,
+        columnNumber: 19
+      });"
+    `)
+  })
+
+  it('dev 模式 dynamic 调用注入位置信息', async () => {
+    const code = `const App = () => <div>{a && b}</div>`
+    const result = await compile(code, devOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, dynamic } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */dynamic(() => a && b, {
+          fileName: "/test.tsx",
+          lineNumber: 1,
+          columnNumber: 24
+        })
+      }, {
+        fileName: "/test.tsx",
+        lineNumber: 1,
+        columnNumber: 19
+      });"
+    `)
+  })
+
+  it('生产模式 branch 调用不注入位置信息', async () => {
+    const code = `const App = () => <div v-if={show}>visible</div>`
+    const result = await compile(code, defaultOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, branch, unref } from "vitarx";
+      const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
+        children: "visible"
+      })]);"
+    `)
+  })
+
+  it('生产模式 dynamic 调用不注入位置信息', async () => {
+    const code = `const App = () => <div>{a && b}</div>`
+    const result = await compile(code, defaultOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, dynamic } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */dynamic(() => a && b)
+      });"
+    `)
   })
 })

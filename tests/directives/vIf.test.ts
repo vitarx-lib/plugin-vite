@@ -9,11 +9,7 @@ describe('v-if 连续链', () => {
       "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
         children: "visible"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 1,
-        columnNumber: 19
-      });"
+      })]);"
     `)
   })
 
@@ -30,11 +26,7 @@ describe('v-if 连续链', () => {
           children: "visible"
         }), () => /* @__PURE__ */createView("span", {
           children: "hidden"
-        })], {
-          fileName: "/test.tsx",
-          lineNumber: 2,
-          columnNumber: 7
-        })
+        })])
       });"
     `)
   })
@@ -55,11 +47,7 @@ describe('v-if 连续链', () => {
           children: "B"
         }), () => /* @__PURE__ */createView("p", {
           children: "C"
-        })], {
-          fileName: "/test.tsx",
-          lineNumber: 2,
-          columnNumber: 7
-        })
+        })])
       });"
     `)
   })
@@ -89,11 +77,7 @@ describe('v-if 连续链', () => {
           get value() {
             return unref(a);
           }
-        }]])], {
-          fileName: "/test.tsx",
-          lineNumber: 2,
-          columnNumber: 7
-        })
+        }]])])
       });"
     `)
   })

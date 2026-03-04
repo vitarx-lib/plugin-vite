@@ -216,8 +216,8 @@ function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallEx
   const transformedNode = transformJSXElement(node, ctx, false)
   if (!transformedNode) return null
 
-  // 获取位置信息
-  const locInfo = node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  // 获取位置信息（仅开发环境）
+  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
 
   // 生成 branch 调用
   const branchCall = createBranch(

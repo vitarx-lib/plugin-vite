@@ -30,11 +30,7 @@ describe('Children 处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(cond) ? 0 : 1, [() => 'yes', () => 'no'], {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 25
-        })
+        children: /* @__PURE__ */branch(() => unref(cond) ? 0 : 1, [() => 'yes', () => 'no'])
       });"
     `)
   })
@@ -45,11 +41,7 @@ describe('Children 处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => 'yes', () => 'no'], {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 25
-        })
+        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => 'yes', () => 'no'])
       });"
     `)
   })
@@ -60,11 +52,7 @@ describe('Children 处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, dynamic } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */dynamic(() => a && b, {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 24
-        })
+        children: /* @__PURE__ */dynamic(() => a && b)
       });"
     `)
   })
@@ -181,11 +169,7 @@ describe('边界情况', () => {
           children: "yes"
         }), () => /* @__PURE__ */createView("span", {
           children: "no"
-        })], {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 25
-        })
+        })])
       });"
     `)
   })
@@ -196,11 +180,7 @@ describe('边界情况', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, dynamic } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */dynamic(() => a || b, {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 24
-        })
+        children: /* @__PURE__ */dynamic(() => a || b)
       });"
     `)
   })
@@ -213,15 +193,7 @@ describe('边界情况', () => {
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => (a && b) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "x"
-        }), () => /* @__PURE__ */dynamic(() => c || d, {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 51
-        })], {
-          fileName: "/test.tsx",
-          lineNumber: 1,
-          columnNumber: 25
-        })
+        }), () => /* @__PURE__ */dynamic(() => c || d)])
       });"
     `)
   })

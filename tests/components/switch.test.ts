@@ -12,11 +12,7 @@ describe('Switch + Match', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : null), [() => "A", () => "B"], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : null), [() => "A", () => "B"]);"
     `)
   })
 
@@ -29,11 +25,7 @@ describe('Switch + Match', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => "A", () => "Default"], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => "A", () => "Default"]);"
     `)
   })
   it('Match 使用ref ', async () => {

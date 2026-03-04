@@ -38,11 +38,7 @@ describe('Import 自动注入', () => {
       "import { createView as c, unref as u, branch as b } from 'vitarx';
       const App = () => /* @__PURE__ */b(() => u(show) ? 0 : null, [() => /* @__PURE__ */c("div", {
         children: "visible"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 1,
-        columnNumber: 86
-      });"
+      })]);"
     `)
   })
 

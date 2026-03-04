@@ -16,11 +16,7 @@ describe('IfBlock 组件', () => {
         children: "visible"
       }), () => /* @__PURE__ */createView("span", {
         children: "hidden"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      })]);"
     `)
   })
 
@@ -41,11 +37,7 @@ describe('IfBlock 组件', () => {
         children: "B"
       }), () => /* @__PURE__ */createView("p", {
         children: "C"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      })]);"
     `)
   })
 
@@ -60,11 +52,7 @@ describe('IfBlock 组件', () => {
       "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
         children: "visible"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      })]);"
     `)
   })
 
@@ -88,11 +76,7 @@ describe('IfBlock 组件', () => {
         children: "C"
       }), () => /* @__PURE__ */createView("section", {
         children: "D"
-      })], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      })]);"
     `)
   })
 
@@ -106,11 +90,7 @@ describe('IfBlock 组件', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView(MyComponent), () => /* @__PURE__ */createView(OtherComponent)], {
-        fileName: "/test.tsx",
-        lineNumber: 2,
-        columnNumber: 7
-      });"
+      const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView(MyComponent), () => /* @__PURE__ */createView(OtherComponent)]);"
     `)
   })
 
@@ -131,11 +111,7 @@ describe('IfBlock 组件', () => {
           children: "visible"
         }), () => /* @__PURE__ */createView("span", {
           children: "hidden"
-        })], {
-          fileName: "/test.tsx",
-          lineNumber: 3,
-          columnNumber: 9
-        })
+        })])
       });"
     `)
   })

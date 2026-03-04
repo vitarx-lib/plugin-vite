@@ -39,8 +39,8 @@ export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformConte
   nodes.forEach(node => removeVIfChainDirectives(node))
   const branches = nodes.map(node => createArrowFunction(node as t.Expression))
 
-  // 获取位置信息
-  const locInfo = path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
+  // 获取位置信息（仅开发环境）
+  const locInfo = ctx.options.dev && path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
 
   const branchCall = createBranch({ conditions, branches, locInfo }, ctx)
 
