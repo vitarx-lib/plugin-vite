@@ -11,6 +11,7 @@ import {
   collectFragmentVIfChains,
   createArrowFunction,
   createBranch,
+  createLocationObject,
   isWhitespaceJSXText,
   removeVIfChainDirectives
 } from '../../utils/index.js'
@@ -80,8 +81,12 @@ function processVIfChainItem(
     }
   }
 
+  // 获取第一个节点的位置信息
+  const firstNode = nodes[0]
+  const locInfo = firstNode.loc ? createLocationObject(ctx.filename, firstNode.loc) : null
+
   // 生成 branch 调用
-  const branchCall = createBranch({ conditions, branches }, ctx)
+  const branchCall = createBranch({ conditions, branches, locInfo }, ctx)
 
   // 替换链的第一个节点，其他节点标记为 null
   if (start >= 0) {

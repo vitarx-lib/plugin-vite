@@ -25,6 +25,8 @@ export interface BranchConfig {
   branches: t.ArrowFunctionExpression[]
   /** 是否使用 unref 包装标识符条件 */
   useRef?: boolean
+  /** 位置信息对象 */
+  locInfo?: t.ObjectExpression | null
 }
 
 /**
@@ -34,7 +36,7 @@ export interface BranchConfig {
  * @returns branch 调用表达式
  */
 export function createBranch(config: BranchConfig, ctx: TransformContext): t.CallExpression {
-  const { conditions, branches, useRef = true } = config
+  const { conditions, branches, useRef = true, locInfo } = config
 
   markImport(ctx, 'branch')
   // 只有在需要 unref 且条件中有标识符时才标记导入
@@ -45,7 +47,7 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const conditionExpr = buildNestedCondition(conditions, ctx, useRef)
   const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
 
-  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias))
+  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias, locInfo))
 }
 
 /**
@@ -120,39 +122,25 @@ export function buildNestedCondition(
 }
 
 /**
- * 从条件数组和分支节点创建完整的 branch 调用
- * @param conditions - 条件表达式数组
- * @param branchNodes - 分支节点数组（会被包装为箭头函数）
- * @param ctx - 转换上下文
- * @returns branch 调用表达式
- */
-export function createBranchFromNodes(
-  conditions: t.Expression[],
-  branchNodes: t.Expression[],
-  ctx: TransformContext
-): t.CallExpression {
-  const branches = branchNodes.map(node => createArrowFunction(node))
-  return createBranch({ conditions, branches, useRef: true }, ctx)
-}
-
-/**
  * 创建简单的二元条件 branch（用于三元表达式）
  * @param condition - 条件表达式
  * @param consequent - 真值分支
  * @param alternate - 假值分支
  * @param ctx - 转换上下文
+ * @param locInfo - 位置信息对象
  * @returns branch 调用表达式
  */
 export function createBinaryBranch(
   condition: t.Expression,
   consequent: t.Expression,
   alternate: t.Expression,
-  ctx: TransformContext
+  ctx: TransformContext,
+  locInfo?: t.ObjectExpression | null
 ): t.CallExpression {
   const conditions = [condition, t.booleanLiteral(true)]
   const branches = [createArrowFunction(consequent), createArrowFunction(alternate)]
 
   // 只有条件是 Identifier 时才需要 unref
   const useRef = isIdentifier(condition)
-  return createBranch({ conditions, branches, useRef }, ctx)
+  return createBranch({ conditions, branches, useRef, locInfo }, ctx)
 }

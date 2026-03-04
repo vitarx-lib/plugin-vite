@@ -56,12 +56,21 @@ export function createAccessCall(
  * 创建 dynamic 调用
  * @param argument - 参数表达式
  * @param alias - dynamic 别名
+ * @param locInfo - 位置信息对象
  * @returns CallExpression
  */
-export function createDynamicCall(argument: Expression, alias?: string): CallExpression {
-  return t.callExpression(t.identifier(alias || 'dynamic'), [
-    t.arrowFunctionExpression([], argument)
-  ])
+export function createDynamicCall(
+  argument: Expression,
+  alias?: string,
+  locInfo?: ObjectExpression | null
+): CallExpression {
+  const args: Expression[] = [t.arrowFunctionExpression([], argument)]
+
+  if (locInfo) {
+    args.push(locInfo)
+  }
+
+  return t.callExpression(t.identifier(alias || 'dynamic'), args)
 }
 
 /**
@@ -69,14 +78,22 @@ export function createDynamicCall(argument: Expression, alias?: string): CallExp
  * @param condition - 条件函数
  * @param branches - 分支函数数组
  * @param alias - branch 别名
+ * @param locInfo - 位置信息对象
  * @returns CallExpression
  */
 export function createBranchCall(
   condition: ArrowFunctionExpression,
   branches: ArrowFunctionExpression[],
-  alias?: string
+  alias?: string,
+  locInfo?: ObjectExpression | null
 ): CallExpression {
-  return t.callExpression(t.identifier(alias || 'branch'), [condition, t.arrayExpression(branches)])
+  const args: Expression[] = [condition, t.arrayExpression(branches)]
+
+  if (locInfo) {
+    args.push(locInfo)
+  }
+
+  return t.callExpression(t.identifier(alias || 'branch'), args)
 }
 
 /**

@@ -12,6 +12,7 @@ import {
   collectVIfChainInfo,
   createArrowFunction,
   createBranch,
+  createLocationObject,
   filterWhitespaceChildren,
   hasDirective,
   removeVIfChainDirectives,
@@ -38,7 +39,10 @@ export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformConte
   nodes.forEach(node => removeVIfChainDirectives(node))
   const branches = nodes.map(node => createArrowFunction(node as t.Expression))
 
-  const branchCall = createBranch({ conditions, branches }, ctx)
+  // 获取位置信息
+  const locInfo = path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
+
+  const branchCall = createBranch({ conditions, branches, locInfo }, ctx)
 
   if (path.node.loc) {
     branchCall.loc = path.node.loc

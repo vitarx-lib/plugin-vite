@@ -23,6 +23,7 @@ import {
   createAccessCall,
   createBinaryBranch,
   createDynamicCall,
+  createLocationObject,
   getAlias
 } from '../../utils/index.js'
 
@@ -59,12 +60,12 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
   // JSX 表达式容器
   if (isJSXExpressionContainer(node)) {
     if (node.expression.type === 'JSXEmptyExpression') return null
-    return processChildExpression(node.expression as t.Expression, ctx)
+    return processChildExpression(node.expression as t.Expression, ctx, node.loc)
   }
 
   // JSX 展开子元素
   if (node.type === 'JSXSpreadChild') {
-    return processChildExpression(node.expression, ctx)
+    return processChildExpression(node.expression, ctx, node.loc)
   }
 
   // JSX 元素或片段
@@ -98,7 +99,8 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
   if (isLogicalExpression(node)) {
     markImport(ctx, 'dynamic')
     const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    return addPureComment(createDynamicCall(node, dynamicAlias))
+    const locInfo = node.loc ? createLocationObject(ctx.filename, node.loc) : null
+    return addPureComment(createDynamicCall(node, dynamicAlias, locInfo))
   }
 
   // 调用表达式
@@ -112,7 +114,11 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
 /**
  * 处理子表达式
  */
-function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Expression {
+function processChildExpression(
+  expr: t.Expression,
+  ctx: TransformContext,
+  loc?: t.SourceLocation | null
+): t.Expression {
   if (isIdentifier(expr)) {
     return expr
   }
@@ -130,7 +136,8 @@ function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Ex
   if (isLogicalExpression(expr)) {
     markImport(ctx, 'dynamic')
     const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    return addPureComment(createDynamicCall(expr, dynamicAlias))
+    const locInfo = loc ? createLocationObject(ctx.filename, loc) : null
+    return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo))
   }
 
   return expr
@@ -150,6 +157,9 @@ function processConditionalExpression(
   const processedConsequent = processChildNode(consequent, ctx) || t.nullLiteral()
   const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
 
+  // 获取位置信息
+  const locInfo = node.loc ? createLocationObject(ctx.filename, node.loc) : null
+
   // 使用公共的 createBinaryBranch
-  return createBinaryBranch(test, processedConsequent, processedAlternate, ctx)
+  return createBinaryBranch(test, processedConsequent, processedAlternate, ctx, locInfo)
 }
