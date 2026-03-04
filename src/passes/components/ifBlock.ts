@@ -12,8 +12,8 @@ import {
   collectVIfChainInfo,
   createArrowFunction,
   createBranch,
-  createLocationObject,
   filterWhitespaceChildren,
+  getDevLocInfo,
   hasDirective,
   removeVIfChainDirectives,
   validateVIfChain
@@ -40,7 +40,7 @@ export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformConte
   const branches = nodes.map(node => createArrowFunction(node as t.Expression))
 
   // 获取位置信息（仅开发环境）
-  const locInfo = ctx.options.dev && path.node.loc ? createLocationObject(ctx.filename, path.node.loc) : null
+  const locInfo = getDevLocInfo(ctx, path.node)
 
   const branchCall = createBranch({ conditions, branches, locInfo }, ctx)
 

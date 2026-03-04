@@ -9,9 +9,9 @@ import { TransformContext } from '../../context.js'
 import {
   addPureComment,
   createCreateViewCall,
-  createLocationObject,
   filterWhitespaceChildren,
   getAlias,
+  getDevLocInfo,
   validateMatchInSwitch
 } from '../../utils/index.js'
 import { processChildren } from './processChildren.js'
@@ -36,7 +36,7 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
 
   const fragmentAlias = getAlias(ctx.vitarxAliases, 'Fragment')
   const createViewAlias = getAlias(ctx.vitarxAliases, 'createView')
-  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  const locInfo = getDevLocInfo(ctx, node)
 
   // 无子元素
   if (children.length === 0) {

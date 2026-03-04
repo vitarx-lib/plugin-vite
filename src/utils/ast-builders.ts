@@ -13,7 +13,7 @@ import {
   type SourceLocation
 } from '@babel/types'
 import { PURE_COMMENT } from '../constants/index.js'
-import type { VitarxImportAliases } from '../context.js'
+import type { TransformContext, VitarxImportAliases } from '../context.js'
 
 /** 用于追踪已添加 PURE 注释的节点 */
 const pureCommentedNodes = new WeakSet<CallExpression>()
@@ -195,4 +195,18 @@ export function addPureComment<T extends CallExpression>(node: T): T {
  */
 export function getAlias(aliases: VitarxImportAliases, name: keyof VitarxImportAliases): string {
   return aliases[name] || name
+}
+
+/**
+ * 获取开发环境下的位置信息对象
+ * 仅在开发环境下返回位置信息，生产环境返回 null
+ * @param ctx - 转换上下文
+ * @param node - AST 节点或位置信息
+ * @returns 位置信息对象或 null
+ */
+export function getDevLocInfo(
+  ctx: TransformContext,
+  node: t.Node | { loc: t.SourceLocation | null }
+): ObjectExpression | null {
+  return ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
 }

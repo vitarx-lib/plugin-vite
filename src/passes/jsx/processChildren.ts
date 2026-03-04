@@ -23,9 +23,35 @@ import {
   createAccessCall,
   createBinaryBranch,
   createDynamicCall,
-  createLocationObject,
-  getAlias
+  getAlias,
+  getDevLocInfo
 } from '../../utils/index.js'
+
+/**
+ * 处理成员表达式
+ */
+function handleMemberExpression(
+  expr: t.MemberExpression,
+  ctx: TransformContext
+): t.CallExpression {
+  markImport(ctx, 'access')
+  const accessAlias = getAlias(ctx.vitarxAliases, 'access')
+  return createAccessCall(expr.object, expr.property as t.Expression, accessAlias)
+}
+
+/**
+ * 处理逻辑表达式
+ */
+function handleLogicalExpression(
+  expr: t.LogicalExpression,
+  ctx: TransformContext,
+  loc?: t.SourceLocation | null
+): t.CallExpression {
+  markImport(ctx, 'dynamic')
+  const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
+  const locInfo = loc ? getDevLocInfo(ctx, { loc }) : null
+  return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo))
+}
 
 /**
  * 处理子节点数组
@@ -85,9 +111,7 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
 
   // 成员表达式
   if (isMemberExpression(node)) {
-    markImport(ctx, 'access')
-    const accessAlias = getAlias(ctx.vitarxAliases, 'access')
-    return createAccessCall(node.object, node.property as t.Expression, accessAlias)
+    return handleMemberExpression(node, ctx)
   }
 
   // 条件表达式
@@ -97,10 +121,7 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
 
   // 逻辑表达式
   if (isLogicalExpression(node)) {
-    markImport(ctx, 'dynamic')
-    const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
-    return addPureComment(createDynamicCall(node, dynamicAlias, locInfo))
+    return handleLogicalExpression(node, ctx)
   }
 
   // 调用表达式
@@ -124,9 +145,7 @@ function processChildExpression(
   }
 
   if (isMemberExpression(expr)) {
-    markImport(ctx, 'access')
-    const accessAlias = getAlias(ctx.vitarxAliases, 'access')
-    return createAccessCall(expr.object, expr.property as t.Expression, accessAlias)
+    return handleMemberExpression(expr, ctx)
   }
 
   if (isConditionalExpression(expr)) {
@@ -134,10 +153,7 @@ function processChildExpression(
   }
 
   if (isLogicalExpression(expr)) {
-    markImport(ctx, 'dynamic')
-    const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-    const locInfo = ctx.options.dev && loc ? createLocationObject(ctx.filename, loc) : null
-    return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo))
+    return handleLogicalExpression(expr, ctx, loc)
   }
 
   return expr
@@ -158,7 +174,7 @@ function processConditionalExpression(
   const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
 
   // 获取位置信息（仅开发环境）
-  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  const locInfo = getDevLocInfo(ctx, node)
 
   // 使用公共的 createBinaryBranch
   return createBinaryBranch(test, processedConsequent, processedAlternate, ctx, locInfo)

@@ -5,6 +5,7 @@
  */
 import { type Node, parse } from 'acorn'
 import { simple as walkSimple } from 'acorn-walk'
+import { UI_API_NAMES } from '../constants/index.js'
 
 /**
  * 代码变更类型
@@ -30,7 +31,7 @@ interface SeparationResult {
  * UI 相关的运行时 API 名称
  * 这些 API 调用代表 UI 描述代码
  */
-const UI_APIS = new Set(['createView', 'branch', 'dynamic', 'access', 'withDirectives', 'jsxDEV'])
+const UI_APIS = new Set([...UI_API_NAMES, 'jsxDEV'])
 
 /**
  * 判断标识符名称是否为 UI API

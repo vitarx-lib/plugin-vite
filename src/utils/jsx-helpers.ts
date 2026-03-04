@@ -189,6 +189,40 @@ export function filterWhitespaceChildren(children: t.Node[]): t.Node[] {
 }
 
 /**
+ * 检查 JSX 元素是否有有效的子元素
+ * @param node - JSX 元素节点
+ * @returns 是否有有效子元素
+ */
+export function hasEffectiveChildren(node: JSXElement): boolean {
+  return node.children.some(child => {
+    if (isJSXText(child)) {
+      return child.value.trim().length > 0
+    }
+    if (child.type === 'JSXExpressionContainer') {
+      return child.expression.type !== 'JSXEmptyExpression'
+    }
+    return true
+  })
+}
+
+/**
+ * 过滤并返回有效的子元素
+ * @param node - JSX 元素节点
+ * @returns 有效子元素数组
+ */
+export function filterEffectiveChildren(node: JSXElement): t.Node[] {
+  return node.children.filter(child => {
+    if (isJSXText(child)) {
+      return child.value.trim().length > 0
+    }
+    if (child.type === 'JSXExpressionContainer') {
+      return child.expression.type !== 'JSXEmptyExpression'
+    }
+    return true
+  })
+}
+
+/**
  * 校验 Match 组件必须在 Switch 内使用
  * @param children - 子节点数组
  */

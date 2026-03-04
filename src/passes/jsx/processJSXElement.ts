@@ -13,11 +13,13 @@ import {
   createArrowFunction,
   createBranch,
   createCreateViewCall,
-  createLocationObject,
   getAlias,
+  getDevLocInfo,
   getDirectiveValue,
   getJSXAttributeByName,
   getJSXElementName,
+  hasEffectiveChildren,
+  filterEffectiveChildren,
   isNativeElement,
   isVElse,
   isVIf,
@@ -106,15 +108,7 @@ export function transformJSXElement(
   const type = isNativeElement(name) ? t.stringLiteral(name) : t.identifier(name)
 
   // 检测是否有有效子元素
-  const hasChildren = node.children.some(child => {
-    if (isJSXText(child)) {
-      return child.value.trim().length > 0
-    }
-    if (isJSXExpressionContainer(child)) {
-      return child.expression.type !== 'JSXEmptyExpression'
-    }
-    return true
-  })
+  const hasChildren = hasEffectiveChildren(node)
 
   // 处理属性（有子元素时跳过 children 属性）
   const { props, directives } = processProps(node, ctx, hasChildren)
@@ -125,7 +119,7 @@ export function transformJSXElement(
   // 生成 createView 调用
   markImport(ctx, 'createView')
   const createViewAlias = getAlias(ctx.vitarxAliases, 'createView')
-  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  const locInfo = getDevLocInfo(ctx, node)
 
   let viewCall = createCreateViewCall(type, finalProps, locInfo, createViewAlias)
 
@@ -153,15 +147,7 @@ function processElementChildren(
   ctx: TransformContext
 ): t.ObjectExpression | null {
   // 过滤有效子元素
-  const children = node.children.filter(child => {
-    if (isJSXText(child)) {
-      return child.value.trim().length > 0
-    }
-    if (isJSXExpressionContainer(child)) {
-      return child.expression.type !== 'JSXEmptyExpression'
-    }
-    return true
-  })
+  const children = filterEffectiveChildren(node)
 
   if (children.length === 0) {
     return props
@@ -217,7 +203,7 @@ function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallEx
   if (!transformedNode) return null
 
   // 获取位置信息（仅开发环境）
-  const locInfo = ctx.options.dev && node.loc ? createLocationObject(ctx.filename, node.loc) : null
+  const locInfo = getDevLocInfo(ctx, node)
 
   // 生成 branch 调用
   const branchCall = createBranch(

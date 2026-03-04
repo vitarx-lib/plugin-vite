@@ -14,6 +14,13 @@ export const VITARX_APIS = {
 } as const
 
 /**
+ * UI 相关的 API 名称列表
+ * 这些 API 用于创建视图，在 HMR 时需要识别
+ */
+export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'access', 'withDirectives'] as const
+export type UIApiName = (typeof UI_API_NAMES)[number]
+
+/**
  * Ref 相关 API 名称
  * 用于识别 ref 变量
  */

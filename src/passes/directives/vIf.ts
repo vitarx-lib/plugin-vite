@@ -11,7 +11,7 @@ import {
   collectFragmentVIfChains,
   createArrowFunction,
   createBranch,
-  createLocationObject,
+  getDevLocInfo,
   isWhitespaceJSXText,
   removeVIfChainDirectives
 } from '../../utils/index.js'
@@ -83,8 +83,7 @@ function processVIfChainItem(
 
   // 获取第一个节点的位置信息（仅开发环境）
   const firstNode = nodes[0]
-  const locInfo =
-    ctx.options.dev && firstNode.loc ? createLocationObject(ctx.filename, firstNode.loc) : null
+  const locInfo = getDevLocInfo(ctx, firstNode)
 
   // 生成 branch 调用
   const branchCall = createBranch({ conditions, branches, locInfo }, ctx)

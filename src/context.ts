@@ -6,12 +6,13 @@
 import type { File } from '@babel/types'
 import type { CompileOptions } from './transform.js'
 import type { CompilerWarning } from './error.js'
+import { UI_API_NAMES } from './constants/index.js'
 
 /**
  * UI 相关的 API 名称列表
  * 这些 API 用于创建视图，在 HMR 时需要识别
  */
-export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'access', 'withDirectives'] as const
+export const UI_API_NAMES_CONST = UI_API_NAMES
 export type UIApiName = (typeof UI_API_NAMES)[number]
 
 /**

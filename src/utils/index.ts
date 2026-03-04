@@ -18,6 +18,8 @@ export {
   removeVIfChainDirectives,
   removeAttribute,
   filterWhitespaceChildren,
+  hasEffectiveChildren,
+  filterEffectiveChildren,
   validateMatchInSwitch
 } from './jsx-helpers.js'
 
@@ -32,7 +34,8 @@ export {
   createArrowFunction,
   createLocationObject,
   addPureComment,
-  getAlias
+  getAlias,
+  getDevLocInfo
 } from './ast-builders.js'
 
 // 模式处理辅助函数
