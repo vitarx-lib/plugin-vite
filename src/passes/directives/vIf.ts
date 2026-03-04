@@ -12,7 +12,7 @@ import {
   createArrowFunction,
   createBranch,
   isWhitespaceJSXText,
-  removeVDirectives
+  removeVIfChainDirectives
 } from '../../utils/index.js'
 
 /**
@@ -73,7 +73,7 @@ function processVIfChainItem(
   // 移除指令并转换节点
   const branches: t.ArrowFunctionExpression[] = []
   for (const node of nodes) {
-    removeVDirectives(node)
+    removeVIfChainDirectives(node)
     const transformedNode = transformJSXElement(node, ctx, false)
     if (transformedNode) {
       branches.push(createArrowFunction(transformedNode))

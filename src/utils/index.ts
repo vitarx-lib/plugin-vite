@@ -15,6 +15,7 @@ export {
   isVElseIf,
   isVElse,
   removeVDirectives,
+  removeVIfChainDirectives,
   removeAttribute,
   filterWhitespaceChildren,
   validateMatchInSwitch

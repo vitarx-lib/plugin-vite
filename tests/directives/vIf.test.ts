@@ -63,4 +63,22 @@ describe('v-if 连续链', () => {
     </>`
     await expect(compile(code)).rejects.toThrow('[E004]')
   })
+  it('兼容混合其他指令',async () => {
+    const code = `const App = () => <>
+      <div v-if={b} v-show={a}>text</div>
+    </>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, Fragment, branch, withDirectives, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView(Fragment, {
+        children: /* @__PURE__ */branch(() => unref(b) ? 0 : null, [() => /* @__PURE__ */withDirectives(createView("div", {
+          children: "text"
+        }), [["show", {
+          get value() {
+            return unref(a);
+          }
+        }]])])
+      });"
+    `)
+  })
 })

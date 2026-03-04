@@ -14,7 +14,7 @@ import {
   createBranch,
   filterWhitespaceChildren,
   hasDirective,
-  removeVDirectives,
+  removeVIfChainDirectives,
   validateVIfChain
 } from '../../utils/index.js'
 
@@ -35,7 +35,7 @@ export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformConte
 
   const { nodes, conditions } = collectVIfChainInfo(jsxChildren)
 
-  nodes.forEach(node => removeVDirectives(node))
+  nodes.forEach(node => removeVIfChainDirectives(node))
   const branches = nodes.map(node => createArrowFunction(node as t.Expression))
 
   const branchCall = createBranch({ conditions, branches }, ctx)

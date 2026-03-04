@@ -143,6 +143,26 @@ export function removeVDirectives(node: JSXElement): void {
 }
 
 /**
+ * 移除元素上的 v-if 链指令（v-if、v-else-if、v-else）
+ */
+export function removeVIfChainDirectives(node: JSXElement): void {
+  const vIfChainDirectives = ['v-if', 'v-else-if', 'v-else']
+  node.openingElement.attributes = node.openingElement.attributes.filter(attr => {
+    if (attr.type === 'JSXAttribute') {
+      const attrName = attr.name
+      if (attrName.type === 'JSXNamespacedName') {
+        if (attrName.namespace.name === 'v') {
+          return !vIfChainDirectives.includes(`v-${attrName.name.name}`)
+        }
+      } else if (attrName.type === 'JSXIdentifier') {
+        return !vIfChainDirectives.includes(attrName.name)
+      }
+    }
+    return true
+  })
+}
+
+/**
  * 移除元素上指定名称的属性
  */
 export function removeAttribute(node: JSXElement, attrName: string): void {

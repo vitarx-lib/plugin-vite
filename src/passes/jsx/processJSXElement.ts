@@ -22,7 +22,7 @@ import {
   isVElse,
   isVIf,
   isVIfChain,
-  removeVDirectives
+  removeVIfChainDirectives
 } from '../../utils/index.js'
 import { processDirectives } from '../directives/index.js'
 import { processProps } from '../props/index.js'
@@ -211,10 +211,8 @@ function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallEx
   const condition = getDirectiveValue(node, 'v-if')
   if (!condition) return null
 
-  // 移除 v- 指令
-  removeVDirectives(node)
+  removeVIfChainDirectives(node)
 
-  // 转换元素
   const transformedNode = transformJSXElement(node, ctx, false)
   if (!transformedNode) return null
 
