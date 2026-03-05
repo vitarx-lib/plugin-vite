@@ -1,9 +1,22 @@
-## [0.0.1-beta.1](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-alpha.2...v0.0.1-beta.1) (2026-03-04)
+## [0.0.1-beta.2](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.1...v0.0.1-beta.2) (2026-03-05)
 
 
 ### Bug Fixes
 
 * **directives:** 修复 v-if 指令链移除逻辑 ([930f3ec](https://gitee.com/vitarx/plugin-vite/commits/930f3ec62ab68a31848f583ac078b791f326b793))
+
+
+### Features
+
+* **vite:** 升级兼容Vite 5-8版本的transform机制 ([a7b8ac0](https://gitee.com/vitarx/plugin-vite/commits/a7b8ac05da482d0736a1541c9e83f6159ec8fabb))
+
+
+
+## [0.0.1-alpha.2](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-alpha.1...v0.0.1-alpha.2) (2026-02-28)
+
+
+### Bug Fixes
+
 * **transform:** 修复源码映射处理逻辑 ([63c73f6](https://gitee.com/vitarx/plugin-vite/commits/63c73f6c44f422a7b90b0ed5b14e731dca5cd2d4))
 
 
