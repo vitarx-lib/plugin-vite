@@ -21,6 +21,7 @@ let viteTransform: (
   config: ResolvedConfig
 ) => any
 if (version.startsWith('8')) {
+  // @ts-ignore
   viteTransform = (await import('vite')).transformWithOxc
 } else {
   viteTransform = (await import('vite')).transformWithEsbuild
@@ -49,6 +50,7 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       const configSSR = !!config.build?.ssr
       isSSR = env.isSsrBuild === true || configSSR
       return defineConfig({
+        // @ts-ignore
         oxc: {
           jsx: 'preserve',
           exclude: /\.[jt]sx$/
