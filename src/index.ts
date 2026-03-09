@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin, type ResolvedConfig, version } from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 // 编译宏组件类型导出
-export type * from './components.js'
+export type * from './types.js'
 
 /**
  * vite-plugin-vitarx 配置选项

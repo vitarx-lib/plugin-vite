@@ -1,6 +1,6 @@
 import type { RenderUnit, View } from 'vitarx'
 
-interface IfBlockProps {
+export interface IfBlockProps {
   /**
    * 子元素列表
    *
@@ -8,7 +8,8 @@ interface IfBlockProps {
    */
   children: View[]
 }
-interface SwitchProps {
+
+export interface SwitchProps {
   /**
    * 默认渲染内容
    *
@@ -22,7 +23,8 @@ interface SwitchProps {
    */
   children: View | View[]
 }
-interface MatchProps {
+
+export interface MatchProps {
   /**
    * 匹配条件
    */
@@ -83,4 +85,25 @@ declare global {
    * 需 `Switch` 组件搭配使用，不允许单独使用。
    */
   const Match: (props: MatchProps) => View
+  /**
+   * 开发环境
+   *
+   * @example
+   * ```js
+   * // 等效于 import.meta.env.DEV
+   * if(__VITARX_DEV__){
+   *   // 仅在开发环境下运行的代码
+   * }
+   * ```
+   */
+  const __VITARX_DEV__: boolean
+  /**
+   * SSR环境
+   *
+   * // 等效于 import.meta.env.SSR
+   * if(__VITARX_SSR__){
+   *   // 仅在服务端运行的代码
+   * }
+   */
+  const __VITARX_SSR__: boolean
 }
