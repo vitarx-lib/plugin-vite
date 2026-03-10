@@ -57,7 +57,7 @@ describe('Dev 位置信息', () => {
   it('dev 模式带 import 的多行代码位置信息', async () => {
     const code = `import { For, ref, View } from 'vitarx'
 
-export default function DynamicList(): View {
+  export default function DynamicList(): View {
   const items = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
   return (
     <div>
