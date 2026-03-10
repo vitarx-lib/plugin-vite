@@ -1,10 +1,24 @@
-## [0.0.1-beta.3](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.2...v0.0.1-beta.3) (2026-03-06)
+## [0.0.1-beta.4](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.3...v0.0.1-beta.4) (2026-03-10)
+
+
+### Bug Fixes
+
+* **imports:** 跳过 import type 和 import typeof 语句 ([29c0631](https://gitee.com/vitarx/plugin-vite/commits/29c06314d9200b404ab611d52999dae57b3baa49))
+
+
+### Features
+
+* **imports:** 优化导入说明符追加逻辑 ([4fbc491](https://gitee.com/vitarx/plugin-vite/commits/4fbc49187f3b08f38100203f1577f5ae080427e3))
+* **vite:** 添加针对不同版本vite的转换器支持 ([13f0f0d](https://gitee.com/vitarx/plugin-vite/commits/13f0f0d1f5118cc17cc445bb4b4b214519b81183))
+
+
+
+## [0.0.1-beta.2](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.1...v0.0.1-beta.2) (2026-03-05)
 
 
 ### Features
 
 * **vite:** 升级兼容Vite 5-8版本的transform机制 ([a7b8ac0](https://gitee.com/vitarx/plugin-vite/commits/a7b8ac05da482d0736a1541c9e83f6159ec8fabb))
-* **vite:** 添加针对不同版本vite的转换器支持 ([13f0f0d](https://gitee.com/vitarx/plugin-vite/commits/13f0f0d1f5118cc17cc445bb4b4b214519b81183))
 
 
 
