@@ -9,6 +9,7 @@ import { collectPatternBindings } from '../../utils/index.js'
 
 /**
  * 收集现有导入信息
+ * 只收集普通的 import 语句，跳过 import type 语句
  * @param program - AST Program 节点
  * @returns 本地变量名集合和 vitarx 导入映射
  */
@@ -21,6 +22,9 @@ export function collectExistingImports(program: t.Program): {
 
   for (const node of program.body) {
     if (node.type !== 'ImportDeclaration') continue
+
+    // 跳过 import type 和 import typeof 语句
+    if (node.importKind === 'type' || node.importKind === 'typeof') continue
 
     const source = node.source.value
     for (const specifier of node.specifiers) {
@@ -42,6 +46,7 @@ export function collectExistingImports(program: t.Program): {
 /**
  * 收集本地变量绑定
  * 包括导入绑定、变量声明、函数声明、类声明
+ * 只收集运行时存在的绑定，跳过 import type
  * @param program - AST Program 节点
  * @returns 本地变量名集合
  */
@@ -50,6 +55,9 @@ export function collectLocalBindings(program: t.Program): Set<string> {
 
   for (const node of program.body) {
     if (node.type === 'ImportDeclaration') {
+      // 跳过 import type 和 import typeof 语句
+      if (node.importKind === 'type' || node.importKind === 'typeof') continue
+
       for (const specifier of node.specifiers) {
         bindings.add(specifier.local.name)
       }

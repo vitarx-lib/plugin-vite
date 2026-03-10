@@ -48,10 +48,16 @@ export function injectImports(program: t.Program, ctx: TransformContext): void {
 
 /**
  * 查找已存在的 vitarx 导入语句
+ * 只查找普通的 import 语句，跳过 import type 语句
  */
 function findExistingVitarxImport(program: t.Program): t.ImportDeclaration | null {
   for (const node of program.body) {
-    if (node.type === 'ImportDeclaration' && node.source.value === VITARX_MODULE) {
+    if (
+      node.type === 'ImportDeclaration' &&
+      node.source.value === VITARX_MODULE &&
+      node.importKind !== 'type' &&
+      node.importKind !== 'typeof'
+    ) {
       return node
     }
   }
