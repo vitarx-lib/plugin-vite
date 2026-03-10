@@ -1,6 +1,12 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, type Plugin, type ResolvedConfig, version } from 'vite'
+import {
+  type ESBuildOptions,
+  type Plugin,
+  type ResolvedConfig,
+  type UserConfig,
+  version
+} from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 // 编译宏组件类型导出
 export type * from './types.js'
@@ -13,6 +19,7 @@ export type * from './types.js'
 export interface VitePluginVitarxOptions {}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const IS_V8 = version.startsWith('8')
 let viteTransform: (
   code: string,
   filename: string,
@@ -20,7 +27,7 @@ let viteTransform: (
   inMap: object,
   config: ResolvedConfig
 ) => any
-if (version.startsWith('8')) {
+if (IS_V8) {
   // @ts-ignore
   viteTransform = (await import('vite')).transformWithOxc
 } else {
@@ -49,16 +56,11 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
       isDEV = env.command === 'serve' && !env.isPreview
       const configSSR = !!config.build?.ssr
       isSSR = env.isSsrBuild === true || configSSR
-      return defineConfig({
-        // @ts-ignore
-        oxc: {
-          jsx: 'preserve',
-          exclude: /\.[jt]sx$/
-        },
-        esbuild: {
-          jsx: 'preserve',
-          exclude: /\.[jt]sx$/
-        },
+      const buildConfig: ESBuildOptions = {
+        jsx: 'preserve',
+        exclude: /\.[jt]sx$/
+      }
+      const _config: UserConfig = {
         define: {
           __VITARX_DEV__: JSON.stringify(isDEV),
           __VITARX_SSR__: JSON.stringify(isSSR)
@@ -68,7 +70,9 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
             '@vitarx/vite-plugin/hmr-client': path.join(__dirname, 'hmr-client/index.js')
           }
         }
-      })
+      }
+      _config[IS_V8 ? ('oxc' as 'esbuild') : 'esbuild'] = buildConfig
+      return _config
     },
     configResolved(config) {
       viteConfig = config
