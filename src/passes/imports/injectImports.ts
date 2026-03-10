@@ -36,7 +36,7 @@ export function injectImports(program: t.Program, ctx: TransformContext): void {
 
   const existingVitarxImport = findExistingVitarxImport(program)
 
-  if (existingVitarxImport) {
+  if (existingVitarxImport && canAppendSpecifiers(existingVitarxImport)) {
     appendImportSpecifiers(existingVitarxImport, ctx)
   } else {
     const specifiers = buildImportSpecifiers(ctx)
@@ -44,6 +44,20 @@ export function injectImports(program: t.Program, ctx: TransformContext): void {
     const importDecl = t.importDeclaration(specifiers, t.stringLiteral(VITARX_MODULE))
     program.body.unshift(importDecl)
   }
+}
+
+/**
+ * 检查是否可以向导入语句追加说明符
+ * 只有纯命名导入才能追加，命名空间导入和默认导入不能追加
+ */
+function canAppendSpecifiers(importDecl: t.ImportDeclaration): boolean {
+  for (const spec of importDecl.specifiers) {
+    // 如果存在命名空间导入或默认导入，不能追加
+    if (spec.type === 'ImportNamespaceSpecifier' || spec.type === 'ImportDefaultSpecifier') {
+      return false
+    }
+  }
+  return true
 }
 
 /**
