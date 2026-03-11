@@ -47,7 +47,8 @@ export default class HMRManager {
   /**
    * 置换新模块
    *
-   * 此方法提供给`jsxDev`函数调用，保持每次创建组件实例都是最新的模块！
+   * 此方法提供给`createView`函数调用，保持每次创建组件实例都是最新的模块！
+   *
    * @param component
    */
   resolveComponent(component: Component): Component {
