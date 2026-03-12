@@ -31,7 +31,9 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   ;(view as any).component = newComponent
   // 如果逻辑有变化，则完全重新挂载组件
   if (logic) {
+    const ctx = view.ctx
     view.dispose()
+    view.init(ctx)
     view.mount(placeholder, 'replace')
     return
   }
