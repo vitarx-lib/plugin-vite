@@ -1,12 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import {
-  type ESBuildOptions,
-  type Plugin,
-  type ResolvedConfig,
-  type UserConfig,
-  version
-} from 'vite'
+import { type Plugin, type ResolvedConfig, version } from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 // 编译宏组件类型导出
 export type * from './types.js'
@@ -52,15 +46,12 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
   let viteConfig: ResolvedConfig
   return {
     name: 'vite-plugin-vitarx',
+    enforce: 'pre',
     config(config, env) {
       isDEV = env.command === 'serve' && !env.isPreview
       const configSSR = !!config.build?.ssr
       isSSR = env.isSsrBuild === true || configSSR
-      const buildConfig: ESBuildOptions = {
-        jsx: 'preserve',
-        exclude: /\.[jt]sx$/
-      }
-      const _config: UserConfig = {
+      return {
         define: {
           __VITARX_DEV__: JSON.stringify(isDEV),
           __VITARX_SSR__: JSON.stringify(isSSR)
@@ -69,10 +60,11 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
           alias: {
             '@vitarx/vite-plugin/hmr-client': path.join(__dirname, 'hmr-client/index.js')
           }
+        },
+        [IS_V8 ? 'oxc' : 'esbuild']: {
+          jsx: 'preserve'
         }
       }
-      _config[IS_V8 ? ('oxc' as 'esbuild') : 'esbuild'] = buildConfig
-      return _config
     },
     configResolved(config) {
       viteConfig = config
