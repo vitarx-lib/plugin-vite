@@ -48,7 +48,6 @@ const processedNodes = new WeakSet<t.Node>()
  * 检查文件是否需要转换
  */
 function shouldTransform(id: string): boolean {
-  if (id.includes('node_modules')) return false
   const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
   return ext === 'jsx' || ext === 'tsx'
 }
