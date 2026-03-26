@@ -1,16 +1,30 @@
-## [0.0.1-beta.5](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.4...v0.0.1-beta.5) (2026-03-15)
+## [0.0.1-beta.6](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.5...v0.0.1-beta.6) (2026-03-26)
 
 
 ### Bug Fixes
 
 * **hmr-client:** 修复组件逻辑变化时的完全重挂载问题 ([0aad7a5](https://gitee.com/vitarx/plugin-vite/commits/0aad7a5b1a39d6ead243a07032d8eec3eaea006f))
+* **transform:** 修复模块判断逻辑导致转换错误 ([57635b4](https://gitee.com/vitarx/plugin-vite/commits/57635b4a55a358c7f27b5f6079ab5589394ba38c))
+
+
+### Features
+
+* **plugin:** 新增 className 转 class 功能 ([47553cd](https://gitee.com/vitarx/plugin-vite/commits/47553cd0052614ea3a26c74900242ce1d3d5da1a))
+* **types:** 添加条件渲染指令的类型声明 ([3f4bc9a](https://gitee.com/vitarx/plugin-vite/commits/3f4bc9a6aec231df001cf656ec8ed05fce1741e6))
+
+
+
+## [0.0.1-beta.4](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.3...v0.0.1-beta.4) (2026-03-10)
+
+
+### Bug Fixes
+
 * **imports:** 跳过 import type 和 import typeof 语句 ([29c0631](https://gitee.com/vitarx/plugin-vite/commits/29c06314d9200b404ab611d52999dae57b3baa49))
 
 
 ### Features
 
 * **imports:** 优化导入说明符追加逻辑 ([4fbc491](https://gitee.com/vitarx/plugin-vite/commits/4fbc49187f3b08f38100203f1577f5ae080427e3))
-* **types:** 添加条件渲染指令的类型声明 ([3f4bc9a](https://gitee.com/vitarx/plugin-vite/commits/3f4bc9a6aec231df001cf656ec8ed05fce1741e6))
 
 
 
