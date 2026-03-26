@@ -249,9 +249,41 @@ import.meta.hot.accept(mod => {
 
 ```typescript
 interface VitePluginVitarxOptions {
-  // 暂无配置选项
+  /**
+   * 是否将 className 属性转换为 class 属性
+   * 仅对原生 HTML 元素生效，组件不生效
+   * @default false
+   */
+  transformClassNameToClass?: boolean
 }
 ```
+
+### className 转 class
+
+启用 `transformClassNameToClass` 选项后，原生 HTML 元素的 `className` 属性会自动转换为 `class`：
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import vitarx from '@vitarx/plugin-vite'
+
+export default defineConfig({
+  plugins: [vitarx({ transformClassNameToClass: true })]
+})
+```
+
+```jsx
+// 编译前
+<div className="container">Hello</div>
+
+// 编译后
+createView('div', { class: 'container', children: 'Hello' })
+```
+
+**注意事项：**
+- 仅对原生 HTML 元素（小写字母开头）生效，组件不转换
+- `class` 和 `className` 不能同时存在，否则会抛出 `E016` 错误
+- `class` 属性优先级更高
 
 ## 目录结构
 
@@ -292,6 +324,7 @@ src/
 | E013 | Match 组件必须包含子元素             |
 | E014 | IfBlock 组件必须包含子元素           |
 | E015 | Switch 组件必须包含至少一个 Match 子元素 |
+| E016 | class 和 className 不能同时存在    |
 
 ## License
 

@@ -5,7 +5,8 @@ export const defaultOptions: CompileOptions = {
   dev: false,
   ssr: false,
   runtimeModule: 'vitarx',
-  sourceMap: false
+  sourceMap: false,
+  transformClassNameToClass: false
 }
 
 export const devOptions: CompileOptions = {
@@ -13,7 +14,17 @@ export const devOptions: CompileOptions = {
   dev: true,
   ssr: false,
   runtimeModule: 'vitarx',
-  sourceMap: false
+  sourceMap: false,
+  transformClassNameToClass: false
+}
+
+export const classNameTransformOptions: CompileOptions = {
+  hmr: false,
+  dev: false,
+  ssr: false,
+  runtimeModule: 'vitarx',
+  sourceMap: false,
+  transformClassNameToClass: true
 }
 
 export async function compile(

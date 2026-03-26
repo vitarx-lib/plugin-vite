@@ -39,6 +39,7 @@ export interface CompileOptions {
   ssr: boolean
   runtimeModule: string
   sourceMap: boolean | 'inline' | 'both'
+  transformClassNameToClass: boolean
 }
 
 /** 用于追踪已处理的节点 */

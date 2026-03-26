@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from '../utils'
+import { compile, classNameTransformOptions } from '../utils'
 
 describe('Props getter 行为', () => {
   it('静态字符串属性', async () => {
@@ -261,6 +261,91 @@ describe('ref 变量优化', () => {
         get "b"() {
           return unref(b);
         }
+      });"
+    `)
+  })
+})
+
+describe('className 转 class', () => {
+  it('默认不转换 className', async () => {
+    const code = `const App = () => <div className="test"></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "className": "test"
+      });"
+    `)
+  })
+
+  it('启用 transformClassNameToClass 时转换 className 为 class', async () => {
+    const code = `const App = () => <div className="test"></div>`
+    const result = await compile(code, classNameTransformOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "class": "test"
+      });"
+    `)
+  })
+
+  it('启用 transformClassNameToClass 时动态 className 转换为 class getter', async () => {
+    const code = `const App = () => <div className={dynamicClass}></div>`
+    const result = await compile(code, classNameTransformOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        get "class"() {
+          return unref(dynamicClass);
+        }
+      });"
+    `)
+  })
+
+  it('启用 transformClassNameToClass 时组件不转换 className', async () => {
+    const code = `const App = () => <MyComponent className="test"></MyComponent>`
+    const result = await compile(code, classNameTransformOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView(MyComponent, {
+        "className": "test"
+      });"
+    `)
+  })
+
+  it('启用 transformClassNameToClass 时 class 和 className 同时存在抛出错误', async () => {
+    const code = `const App = () => <div class="a" className="b"></div>`
+    await expect(async () => {
+      await compile(code, classNameTransformOptions)
+    }).rejects.toThrow('[E016]')
+  })
+
+  it('启用 transformClassNameToClass 时 className 在前 class 在后也抛出错误', async () => {
+    const code = `const App = () => <div className="b" class="a"></div>`
+    await expect(async () => {
+      await compile(code, classNameTransformOptions)
+    }).rejects.toThrow('[E016]')
+  })
+
+  it('启用 transformClassNameToClass 时单独使用 class 正常工作', async () => {
+    const code = `const App = () => <div class="test"></div>`
+    const result = await compile(code, classNameTransformOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "class": "test"
+      });"
+    `)
+  })
+
+  it('未启用 transformClassNameToClass 时 class 和 className 可同时存在', async () => {
+    const code = `const App = () => <div class="a" className="b"></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "class": "a",
+        "className": "b"
       });"
     `)
   })

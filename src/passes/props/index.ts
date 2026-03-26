@@ -5,12 +5,46 @@
  */
 import * as t from '@babel/types'
 import { TransformContext } from '../../context.js'
-import { processAttribute, processSpreadAttribute } from './attribute.js'
+import { createError } from '../../error.js'
+import { isNativeElement } from '../../utils/index.js'
+import { createProperty, getAttributeValue, processAttribute, processSpreadAttribute } from './attribute.js'
 import type { DirectiveInfo, PropsResult, VModelState } from './types.js'
 import { createVModelProps, extractVModelState } from './vmodel.js'
 
 // 导出类型定义
-export type { PropsResult, VModelState, AttributeResult } from './types.js'
+export type { AttributeResult, PropsResult, VModelState } from './types.js'
+
+/**
+ * 获取 JSX 元素的名称
+ */
+function getJSXElementName(node: t.JSXElement): string | null {
+  const nameNode = node.openingElement.name
+  return nameNode.type === 'JSXIdentifier' ? nameNode.name : null
+}
+
+/**
+ * 校验 class 和 className 不能同时存在
+ */
+function validateClassAndClassName(attributes: (t.JSXAttribute | t.JSXSpreadAttribute)[]): void {
+  let hasClass = false
+  let hasClassName = false
+  let classNameAttr: t.JSXAttribute | undefined
+
+  for (const attr of attributes) {
+    if (attr.type === 'JSXAttribute' && attr.name.type === 'JSXIdentifier') {
+      if (attr.name.name === 'class') {
+        hasClass = true
+      } else if (attr.name.name === 'className') {
+        hasClassName = true
+        classNameAttr = attr
+      }
+    }
+  }
+
+  if (hasClass && hasClassName) {
+    throw createError('E016', classNameAttr)
+  }
+}
 
 /**
  * 处理 JSX 元素的属性
@@ -22,6 +56,7 @@ export type { PropsResult, VModelState, AttributeResult } from './types.js'
  * 3. 普通属性转换为对象属性或 getter
  * 4. 指令属性提取到 directives Map
  * 5. v-model 特殊处理，生成 modelValue 和 onUpdate:modelValue
+ * 6. className 转 class（仅原生元素，启用 transformClassNameToClass 时）
  *
  * @param node - JSX 元素节点
  * @param ctx - 转换上下文
@@ -57,6 +92,16 @@ export function processProps(
   // 提取初始 v-model 状态
   let vModelState: VModelState = extractVModelState(attributes)
 
+  // 获取元素名称，用于判断是否为原生元素
+  const elementName = getJSXElementName(node)
+  const isNative = elementName ? isNativeElement(elementName) : false
+
+  // 检查是否启用 className 转 class 且为原生元素
+  const shouldTransformClassName = ctx.options.transformClassNameToClass && isNative
+
+  // 如果启用 className 转 class，先检测 class 和 className 冲突
+  if (shouldTransformClassName) validateClassAndClassName(attributes)
+
   // 遍历处理所有属性
   for (const attr of attributes) {
     // 处理展开属性 {...props}
@@ -73,6 +118,19 @@ export function processProps(
     if (attr.type === 'JSXAttribute') {
       // 如果有子元素，跳过 children 属性
       if (hasChildren && attr.name.type === 'JSXIdentifier' && attr.name.name === 'children') {
+        continue
+      }
+
+      // 如果启用 className 转 class，处理 className 属性
+      if (
+        shouldTransformClassName &&
+        attr.name.type === 'JSXIdentifier' &&
+        attr.name.name === 'className'
+      ) {
+        const value = getAttributeValue(attr.value)
+        const property = createProperty('class', value, ctx)
+        properties.push(property)
+        existingPropNames.add('class')
         continue
       }
 

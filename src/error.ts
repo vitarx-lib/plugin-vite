@@ -84,6 +84,8 @@ export const ErrorCodes = {
   E014: 'E014',
   /** Switch 组件必须有 Match 子元素 */
   E015: 'E015',
+  /** class 和 className 不能同时存在 */
+  E016: 'E016',
 } as const
 
 /**
@@ -113,6 +115,7 @@ export const ErrorMessages: Record<string, string> = {
   E013: 'Match component must have children',
   E014: 'IfBlock component must have children',
   E015: 'Switch component must have at least one Match child',
+  E016: 'Cannot use both "class" and "className" attributes on the same element. When transformClassNameToClass is enabled, "class" takes priority',
 }
 
 /**

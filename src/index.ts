@@ -7,10 +7,20 @@ export type * from './types.js'
 
 /**
  * vite-plugin-vitarx 配置选项
- *
- * 暂无配置选项
  */
-export interface VitePluginVitarxOptions {}
+export interface VitePluginVitarxOptions {
+  /**
+   * 是否将 className 属性转换为 class 属性
+   * 仅对原生 HTML 元素生效，组件不生效
+   *
+   * 当启用时：
+   * - `<div className="test" />` 转换为 `<div class="test" />`
+   * - 如果同时存在 class 和 className，会抛出错误（class 优先级更高）
+   *
+   * @default false
+   */
+  transformClassNameToClass?: boolean
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const IS_V8 = version.startsWith('8')
@@ -35,11 +45,12 @@ if (IS_V8) {
  * - 支持 v-if、v-else-if、v-else 、v-model 等编译宏指令
  * - 支持 Switch , IfBlock 等编译宏组件
  * - 开发时 HMR 热更新相关代码注入与功能支持
+ * - 支持 className 转 class（仅原生 HTML 元素）
  *
- * @param _options - 暂无可选配置。
+ * @param options - 插件配置选项。
  * @returns - vite插件对象。
  */
-export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
+export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
   let compileOptions: CompileOptions
   let isDEV = false
   let isSSR = false
@@ -73,7 +84,8 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
         ssr: isSSR,
         hmr: isDEV && !isSSR,
         runtimeModule: 'vitarx',
-        sourceMap: false
+        sourceMap: false,
+        transformClassNameToClass: options?.transformClassNameToClass ?? false
       }
     },
     async transform(code, id) {

@@ -41,60 +41,6 @@ export function processSpreadAttribute(
 }
 
 /**
- * 处理单个 JSX 属性
- * 根据属性名类型分发到不同的处理逻辑
- * @param attr - JSX 属性节点
- * @param existingPropNames - 已存在的属性名集合
- * @param ctx - 转换上下文
- * @returns 属性处理结果
- */
-export function processAttribute(
-  attr: t.JSXAttribute,
-  existingPropNames: Set<string>,
-  ctx: TransformContext
-): AttributeResult {
-  const attrName = attr.name
-
-  // 处理命名空间属性 (v:xxx)
-  if (attrName.type === 'JSXNamespacedName') {
-    return processNamespacedAttribute(attr, attrName, existingPropNames, ctx)
-  }
-
-  // 处理标识符属性
-  if (attrName.type === 'JSXIdentifier') {
-    const name = attrName.name
-
-    // v-bind 指令
-    if (name === 'v-bind') {
-      const value = getAttributeValue(attr.value)
-      return { type: 'directive', name: 'v-bind', value, isVBind: true, isVModel: false }
-    }
-
-    // v-model 指令
-    if (name === 'v-model') {
-      const value = getAttributeValue(attr.value)
-      return { type: 'directive', name: 'v-model', value, isVBind: false, isVModel: true }
-    }
-
-    // 其他 v- 指令（排除 v-if 系列，它们在单独的处理流程中）
-    if (name.startsWith('v-') && !['v-if', 'v-else-if', 'v-else'].includes(name)) {
-      const value = getAttributeValue(attr.value)
-      return { type: 'directive', name, value, isVBind: false, isVModel: false }
-    }
-
-    // 普通属性
-    existingPropNames.add(name)
-    const value = getAttributeValue(attr.value)
-    const property = createProperty(name, value, ctx)
-    return { type: 'property', property }
-  }
-
-  // 未知属性类型，作为普通属性处理
-  const value = getAttributeValue(attr.value)
-  return { type: 'property', property: t.objectProperty(t.identifier('unknown'), value) }
-}
-
-/**
  * 处理命名空间属性
  *
  * @param attr - JSX 属性节点
@@ -143,20 +89,16 @@ function processNamespacedAttribute(
  * @param value - JSX 属性值
  * @returns 表达式节点
  */
-function getAttributeValue(value: t.JSXAttribute['value']): t.Expression {
-  // 无值属性默认为 true
+export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression {
   if (!value) {
     return t.booleanLiteral(true)
   }
 
-  // 字符串字面量直接返回
   if (isStringLiteral(value)) {
     return value
   }
 
-  // JSX 表达式容器
   if (isJSXExpressionContainer(value)) {
-    // 空表达式 {} 视为 true
     if (value.expression.type === 'JSXEmptyExpression') {
       return t.booleanLiteral(true)
     }
@@ -179,7 +121,7 @@ function getAttributeValue(value: t.JSXAttribute['value']): t.Expression {
  * @param ctx - 转换上下文
  * @returns 对象属性或方法节点
  */
-function createProperty(
+export function createProperty(
   key: string,
   value: t.Expression,
   ctx: TransformContext
@@ -215,4 +157,58 @@ function createProperty(
   }
 
   return t.objectMethod('get', keyNode, [], t.blockStatement([t.returnStatement(value)]))
+}
+
+/**
+ * 处理单个 JSX 属性
+ * 根据属性名类型分发到不同的处理逻辑
+ * @param attr - JSX 属性节点
+ * @param existingPropNames - 已存在的属性名集合
+ * @param ctx - 转换上下文
+ * @returns - 属性处理结果
+ */
+export function processAttribute(
+  attr: t.JSXAttribute,
+  existingPropNames: Set<string>,
+  ctx: TransformContext
+): AttributeResult {
+  const attrName = attr.name
+
+  // 处理命名空间属性 (v:xxx)
+  if (attrName.type === 'JSXNamespacedName') {
+    return processNamespacedAttribute(attr, attrName, existingPropNames, ctx)
+  }
+
+  // 处理标识符属性
+  if (attrName.type === 'JSXIdentifier') {
+    const name = attrName.name
+
+    // v-bind 指令
+    if (name === 'v-bind') {
+      const value = getAttributeValue(attr.value)
+      return { type: 'directive', name: 'v-bind', value, isVBind: true, isVModel: false }
+    }
+
+    // v-model 指令
+    if (name === 'v-model') {
+      const value = getAttributeValue(attr.value)
+      return { type: 'directive', name: 'v-model', value, isVBind: false, isVModel: true }
+    }
+
+    // 其他 v- 指令（排除 v-if 系列，它们在单独的处理流程中）
+    if (name.startsWith('v-') && !['v-if', 'v-else-if', 'v-else'].includes(name)) {
+      const value = getAttributeValue(attr.value)
+      return { type: 'directive', name, value, isVBind: false, isVModel: false }
+    }
+
+    // 普通属性
+    existingPropNames.add(name)
+    const value = getAttributeValue(attr.value)
+    const property = createProperty(name, value, ctx)
+    return { type: 'property', property }
+  }
+
+  // 未知属性类型，作为普通属性处理
+  const value = getAttributeValue(attr.value)
+  return { type: 'property', property: t.objectProperty(t.identifier('unknown'), value) }
 }
