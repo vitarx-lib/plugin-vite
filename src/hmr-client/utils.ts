@@ -31,7 +31,7 @@ interface SeparationResult {
  * UI 相关的运行时 API 名称
  * 这些 API 调用代表 UI 描述代码
  */
-const UI_APIS = new Set([...UI_API_NAMES, 'jsxDEV'])
+const UI_APIS = new Set([...UI_API_NAMES, 'jsxDEV', 'h'])
 
 /**
  * 判断标识符名称是否为 UI API
