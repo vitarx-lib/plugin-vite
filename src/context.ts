@@ -4,16 +4,8 @@
  * @module context
  */
 import type { File } from '@babel/types'
-import type { CompileOptions } from './transform.js'
 import type { CompilerWarning } from './error.js'
-import { UI_API_NAMES } from './constants/index.js'
-
-/**
- * UI 相关的 API 名称列表
- * 这些 API 用于创建视图，在 HMR 时需要识别
- */
-export const UI_API_NAMES_CONST = UI_API_NAMES
-export type UIApiName = (typeof UI_API_NAMES)[number]
+import type { CompileOptions } from './transform.js'
 
 /**
  * 导入信息
@@ -158,15 +150,6 @@ export function createContext(
  */
 export function markImport(ctx: TransformContext, name: keyof ImportInfo): void {
   ctx.imports[name] = true
-}
-
-/**
- * 记录 UI API 别名
- * @param ctx - 转换上下文
- * @param alias - API 别名
- */
-export function markUiApiAlias(ctx: TransformContext, alias: string): void {
-  ctx.uiApiAliases.add(alias)
 }
 
 /**
