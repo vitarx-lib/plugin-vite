@@ -4,7 +4,7 @@
  * @module passes/transform/collect
  */
 import * as t from '@babel/types'
-import { DEFAULT_EXPORT_BASE_NAME, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
+import { DEFAULT_EXPORT_BASE_NAME } from '../constants/index.js'
 import { generateUniqueAlias } from './generate.js'
 
 /**
@@ -14,8 +14,6 @@ export interface ComponentInfo {
   name: string
   node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
 }
-/** 纯编译组件名称集合 */
-const PURE_COMPILE_COMPONENT_SET: Set<string> = new Set(PURE_COMPILE_COMPONENTS)
 
 /**
  * 生成唯一的默认导出组件名称
@@ -73,66 +71,13 @@ function collectFromDefaultExport(node: t.ExportDefaultDeclaration, names: Set<s
   // 匿名函数不在此处预留名称，而是在处理时动态生成唯一名称
 }
 
-/**
- * 检查函数是否为组件函数
- * 通过遍历 AST 检查是否包含 JSX 元素
- */
-function isComponentFunction(
-  node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-): boolean {
-  let result = false
-
-  const check = (n: t.Node): void => {
-    if (result) return
-
-    // 直接包含 JSX 元素
-    if (n.type === 'JSXElement' || n.type === 'JSXFragment') {
-      result = true
-      return
-    }
-
-    // 检查 return 语句中的纯编译组件
-    if (n.type === 'ReturnStatement' && n.argument?.type === 'JSXElement') {
-      const opening = n.argument.openingElement
-      if (
-        opening.name.type === 'JSXIdentifier' &&
-        PURE_COMPILE_COMPONENT_SET.has(opening.name.name)
-      ) {
-        result = true
-        return
-      }
-    }
-
-    // 递归遍历子节点
-    for (const key of Object.keys(n)) {
-      const child = (n as any)[key]
-      if (child && typeof child === 'object') {
-        if (Array.isArray(child)) {
-          for (const c of child) {
-            if (c && typeof child === 'object') check(c)
-          }
-        } else {
-          check(child)
-        }
-      }
-    }
-  }
-
-  check(node)
-  return result
-}
-
-/**
- * 尝试添加组件到列表
- * 检查名称有效性、是否导出、是否为组件函数
- */
 function tryAddComponent(
   name: string,
   node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression,
   exportedNames: Set<string>,
   components: ComponentInfo[]
 ): void {
-  if (isValidComponentName(name) && exportedNames.has(name) && isComponentFunction(node)) {
+  if (isValidComponentName(name) && exportedNames.has(name)) {
     components.push({ name, node })
   }
 }
@@ -194,23 +139,15 @@ function processAnonymousDefaultExport(
     null
   let name: string
 
-  // 匿名函数声明
   if (decl.type === 'FunctionDeclaration' && !decl.id) {
-    if (!isComponentFunction(decl)) return
     name = generateUniqueDefaultName(exportedNames)
     decl.id = t.identifier(name)
     funcNode = decl
-  }
-  // 函数表达式
-  else if (decl.type === 'FunctionExpression') {
-    if (!isComponentFunction(decl)) return
+  } else if (decl.type === 'FunctionExpression') {
     name = generateUniqueDefaultName(exportedNames)
     funcNode = convertToNamedFunctionDeclaration(decl, name)
     node.declaration = funcNode
-  }
-  // 箭头函数
-  else if (decl.type === 'ArrowFunctionExpression') {
-    if (!isComponentFunction(decl)) return
+  } else if (decl.type === 'ArrowFunctionExpression') {
     name = generateUniqueDefaultName(exportedNames)
     funcNode = convertToNamedFunctionDeclaration(decl, name)
     node.declaration = funcNode

@@ -9,7 +9,8 @@ describe('HMR 协议结构', () => {
     dev: true,
     ssr: false,
     runtimeModule: 'vitarx',
-    sourceMap: false
+    sourceMap: false,
+    transformClassNameToClass: false
   }
 
   describe('基本功能', () => {
@@ -166,19 +167,17 @@ describe('HMR 协议结构', () => {
       expect(result).toContain('__$VITARX_HMR$__.instance.memo')
     })
 
-    it('默认导出非组件函数不处理', async () => {
+    it('默认导出匿名函数视为组件', async () => {
       const code = `export default function() { return 1 }`
       const result = await compile(code, hmrOptions)
-      expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
-      expect(result).not.toContain('import.meta.hot.accept')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId')
+      expect(result).toContain('import.meta.hot.accept')
     })
 
-    it('默认导出小写字母开头的匿名函数不处理', async () => {
-      // 注意：匿名函数没有名称，所以检查的是组件特征（是否有 JSX）
-      // 这个测试验证非 JSX 返回的匿名函数不会被处理
+    it('默认导出匿名函数视为组件', async () => {
       const code = `export default function() { return 'not a component' }`
       const result = await compile(code, hmrOptions)
-      expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId')
     })
 
     it('默认导出匿名函数名称冲突时自动生成唯一名称', async () => {
@@ -228,11 +227,11 @@ describe('HMR 协议结构', () => {
       expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
     })
 
-    it('不处理非组件函数（无 JSX）', async () => {
+    it('大写字母开头的函数视为组件', async () => {
       const code = `export const Helper = () => { return 1 }`
       const result = await compile(code, hmrOptions)
-      expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
-      expect(result).not.toContain('import.meta.hot.accept')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId')
+      expect(result).toContain('import.meta.hot.accept')
     })
 
     it('混合导出时只处理组件', async () => {
@@ -444,7 +443,8 @@ describe('HMR 协议结构', () => {
         dev: true,
         ssr: false,
         runtimeModule: 'vitarx',
-        sourceMap: false
+        sourceMap: false,
+        transformClassNameToClass: false
       }
       const code = `export const App = () => {
         const count = ref(0)
