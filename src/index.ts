@@ -28,7 +28,7 @@ let viteTransform: (
   code: string,
   filename: string,
   options: undefined,
-  inMap: object,
+  inMap: object | undefined,
   config: ResolvedConfig
 ) => any
 if (IS_V8) {
@@ -57,7 +57,6 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
   let viteConfig: ResolvedConfig
   return {
     name: 'vite-plugin-vitarx',
-    enforce: 'pre',
     config(config, env) {
       isDEV = env.command === 'serve' && !env.isPreview
       const configSSR = !!config.build?.ssr
@@ -84,20 +83,14 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
         ssr: isSSR,
         hmr: isDEV && !isSSR,
         runtimeModule: 'vitarx',
-        sourceMap: false,
+        sourceMap: true,
         transformClassNameToClass: options?.transformClassNameToClass ?? false
       }
     },
     async transform(code, id) {
       const result = await transform(code, id, compileOptions!)
       if (!result) return null
-      return await viteTransform(
-        result.code,
-        id,
-        undefined,
-        this.getCombinedSourcemap(),
-        viteConfig!
-      )
+      return await viteTransform(result.code, id, undefined, result.map || undefined, viteConfig!)
     }
   }
 }

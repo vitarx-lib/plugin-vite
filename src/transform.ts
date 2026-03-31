@@ -3,7 +3,7 @@
  * 负责解析 JSX/TSX 代码并转换为 createView 调用
  * @module transform
  */
-import generate from '@babel/generator'
+import generate, { type GeneratorResult } from '@babel/generator'
 import { parse, type ParserOptions } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
@@ -28,10 +28,7 @@ import {
   isPureCompileComponent
 } from './utils/index.js'
 
-export interface TransformResult {
-  code: string
-  map: any
-}
+export interface TransformResult extends GeneratorResult {}
 
 export interface CompileOptions {
   hmr: boolean
@@ -162,8 +159,12 @@ function generateCode(
 ): TransformResult {
   const babelGenerate: typeof generate =
     typeof generate === 'object' ? (generate as any).default : generate
-  const output = babelGenerate(ast, { sourceMaps: !!sourceMap, filename: id }, code)
-  return { code: output.code, map: output.map || undefined }
+  const output = babelGenerate(
+    ast,
+    { sourceMaps: !!sourceMap, filename: id, sourceFileName: id },
+    code
+  )
+  return { code: output.code, map: output.map }
 }
 
 /**
