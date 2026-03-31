@@ -1,6 +1,12 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { type Plugin, type ResolvedConfig, version } from 'vite'
+import {
+  type Plugin,
+  type ResolvedConfig,
+  type transformWithEsbuild,
+  type transformWithOxc,
+  version
+} from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 // 编译宏组件类型导出
 export type * from './types.js'
@@ -30,7 +36,7 @@ let viteTransform: (
   options: undefined,
   inMap: object | undefined,
   config: ResolvedConfig
-) => any
+) => ReturnType<typeof transformWithOxc> | ReturnType<typeof transformWithEsbuild>
 if (IS_V8) {
   // @ts-ignore
   viteTransform = (await import('vite')).transformWithOxc
@@ -90,7 +96,7 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
     async transform(code, id) {
       const result = await transform(code, id, compileOptions!)
       if (!result) return null
-      return await viteTransform(result.code, id, undefined, result.map || undefined, viteConfig!)
+      return viteTransform(result.code, id, undefined, result.map || undefined, viteConfig!)
     }
   }
 }
