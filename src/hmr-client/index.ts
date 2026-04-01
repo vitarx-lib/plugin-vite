@@ -112,7 +112,7 @@ export default class HMRManager {
           const id = this.getId(newComponent)
           if (id) this.#idMapToComponent.set(id, newComponent)
           // 更新节点视图
-          if (node.active && node.isMounted) {
+          if ((node.isActive || (node as any).active) && node.isMounted) {
             processUpdate(node, newComponent)
           }
         }
