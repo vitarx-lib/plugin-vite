@@ -1,15 +1,31 @@
-## [0.0.1-beta.6](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.5...v0.0.1-beta.6) (2026-03-26)
+## [0.0.1-beta.7](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.6...v0.0.1-beta.7) (2026-04-02)
 
 
 ### Bug Fixes
 
-* **hmr-client:** 修复组件逻辑变化时的完全重挂载问题 ([0aad7a5](https://gitee.com/vitarx/plugin-vite/commits/0aad7a5b1a39d6ead243a07032d8eec3eaea006f))
+* **core:** 修正类型声明和 sourcemap 生成问题 ([d4a717a](https://gitee.com/vitarx/plugin-vite/commits/d4a717a40deaa956acc37ed1fb4d346015cadb2b))
+* **hmr-client:** 修复 UI_APIS 集合遗漏 'h' 标识符 ([1b33fc9](https://gitee.com/vitarx/plugin-vite/commits/1b33fc9a62c258e9360ac24bde2d5104549ddf82))
+* **hmr-client:** 修正节点视图更新判断条件，兼容`vitarx >= 4.0.0.0-beta.8`版本 ([3a53f43](https://gitee.com/vitarx/plugin-vite/commits/3a53f434adae16f30140963f081824592dc21170))
 * **transform:** 修复模块判断逻辑导致转换错误 ([57635b4](https://gitee.com/vitarx/plugin-vite/commits/57635b4a55a358c7f27b5f6079ab5589394ba38c))
+* **vite:** 修正 viteTransform 函数返回类型和调用逻辑 ([faf8904](https://gitee.com/vitarx/plugin-vite/commits/faf89046a832e1f782b3521c460f24eccf21943b))
 
 
 ### Features
 
 * **plugin:** 新增 className 转 class 功能 ([47553cd](https://gitee.com/vitarx/plugin-vite/commits/47553cd0052614ea3a26c74900242ce1d3d5da1a))
+
+
+
+## [0.0.1-beta.5](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.4...v0.0.1-beta.5) (2026-03-15)
+
+
+### Bug Fixes
+
+* **hmr-client:** 修复组件逻辑变化时的完全重挂载问题 ([0aad7a5](https://gitee.com/vitarx/plugin-vite/commits/0aad7a5b1a39d6ead243a07032d8eec3eaea006f))
+
+
+### Features
+
 * **types:** 添加条件渲染指令的类型声明 ([3f4bc9a](https://gitee.com/vitarx/plugin-vite/commits/3f4bc9a6aec231df001cf656ec8ed05fce1741e6))
 
 
