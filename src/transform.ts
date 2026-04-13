@@ -43,14 +43,6 @@ export interface CompileOptions {
 const processedNodes = new WeakSet<t.Node>()
 
 /**
- * 检查文件是否需要转换
- */
-function shouldTransform(id: string): boolean {
-  const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
-  return ext === 'jsx' || ext === 'tsx'
-}
-
-/**
  * 创建解析器选项
  */
 function createParserOptions(): ParserOptions {
@@ -175,8 +167,6 @@ export async function transform(
   id: string,
   options: CompileOptions
 ): Promise<TransformResult | null> {
-  if (!shouldTransform(id)) return null
-
   const ast = parse(code, createParserOptions())
   const ctx = createContext(code, id, options, ast)
 

@@ -43,6 +43,15 @@ if (IS_V8) {
 } else {
   viteTransform = (await import('vite')).transformWithEsbuild
 }
+
+/**
+ * 检查文件是否需要转换
+ */
+function shouldTransform(id: string): boolean {
+  const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
+  return ext === 'jsx' || ext === 'tsx'
+}
+
 /**
  * vite-plugin-vitarx
  *
@@ -94,6 +103,7 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
       }
     },
     async transform(code, id) {
+      if (!shouldTransform(id)) return null
       const result = await transform(code, id, compileOptions!)
       if (!result) return null
       return viteTransform(result.code, id, undefined, result.map || undefined, viteConfig!)
