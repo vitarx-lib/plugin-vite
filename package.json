@@ -16,7 +16,7 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "vitest run && rimraf dist && tsc",
     "test": "vitest run",
     "release": "release-cli"
   },
@@ -30,6 +30,12 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./transform": {
+      "import": {
+        "types": "./dist/transform.d.ts",
+        "default": "./dist/transform.js"
       }
     }
   },
