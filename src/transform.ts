@@ -160,6 +160,13 @@ function generateCode(
 }
 
 /**
+ * 检查文件是否需要转换
+ */
+export function shouldTransform(id: string): boolean {
+  const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
+  return ext === 'jsx' || ext === 'tsx'
+}
+/**
  * 转换 JSX/TSX 代码
  */
 export async function transform(

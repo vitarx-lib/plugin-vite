@@ -7,7 +7,7 @@ import {
   type transformWithOxc,
   version
 } from 'vite'
-import { type CompileOptions, transform } from './transform.js'
+import { type CompileOptions, shouldTransform, transform } from './transform.js'
 // 编译宏组件类型导出
 export type * from './types.js'
 
@@ -42,14 +42,6 @@ if (IS_V8) {
   viteTransform = (await import('vite')).transformWithOxc
 } else {
   viteTransform = (await import('vite')).transformWithEsbuild
-}
-
-/**
- * 检查文件是否需要转换
- */
-function shouldTransform(id: string): boolean {
-  const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
-  return ext === 'jsx' || ext === 'tsx'
 }
 
 /**
