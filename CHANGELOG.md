@@ -1,4 +1,4 @@
-## [0.0.1-beta.7](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.6...v0.0.1-beta.7) (2026-04-02)
+## [0.0.1-beta.8](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.7...v0.0.1-beta.8) (2026-04-19)
 
 
 ### Bug Fixes
@@ -6,8 +6,21 @@
 * **core:** 修正类型声明和 sourcemap 生成问题 ([d4a717a](https://gitee.com/vitarx/plugin-vite/commits/d4a717a40deaa956acc37ed1fb4d346015cadb2b))
 * **hmr-client:** 修复 UI_APIS 集合遗漏 'h' 标识符 ([1b33fc9](https://gitee.com/vitarx/plugin-vite/commits/1b33fc9a62c258e9360ac24bde2d5104549ddf82))
 * **hmr-client:** 修正节点视图更新判断条件，兼容`vitarx >= 4.0.0.0-beta.8`版本 ([3a53f43](https://gitee.com/vitarx/plugin-vite/commits/3a53f434adae16f30140963f081824592dc21170))
-* **transform:** 修复模块判断逻辑导致转换错误 ([57635b4](https://gitee.com/vitarx/plugin-vite/commits/57635b4a55a358c7f27b5f6079ab5589394ba38c))
 * **vite:** 修正 viteTransform 函数返回类型和调用逻辑 ([faf8904](https://gitee.com/vitarx/plugin-vite/commits/faf89046a832e1f782b3521c460f24eccf21943b))
+
+
+### Features
+
+* **package:** 添加transform子模块的类型和入口声明 ([69b354b](https://gitee.com/vitarx/plugin-vite/commits/69b354b86b973c6981196ebc3fc16364db3c0294))
+
+
+
+## [0.0.1-beta.6](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.5...v0.0.1-beta.6) (2026-03-26)
+
+
+### Bug Fixes
+
+* **transform:** 修复模块判断逻辑导致转换错误 ([57635b4](https://gitee.com/vitarx/plugin-vite/commits/57635b4a55a358c7f27b5f6079ab5589394ba38c))
 
 
 ### Features
