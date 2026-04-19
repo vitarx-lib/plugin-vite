@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from '../utils'
+import { compile } from '../test-utils.js'
 
 describe('Switch + Match', () => {
   it('Switch with Match components', async () => {

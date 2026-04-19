@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile, devOptions } from '../utils/index.js'
+import { compile, devOptions } from '../test-utils.js'
 
 describe('v-model 指令', () => {
   it('v-model 绑定 Identifier (ref)', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from '../utils'
+import { compile } from '../test-utils.js'
 
 describe('v-if 连续链', () => {
   it('单独 v-if 生成 branch', async () => {
@@ -63,7 +63,7 @@ describe('v-if 连续链', () => {
     </>`
     await expect(compile(code)).rejects.toThrow('[E004]')
   })
-  it('兼容混合其他指令',async () => {
+  it('兼容混合其他指令', async () => {
     const code = `const App = () => <>
       <div v-if={b} v-show={a}>text</div>
     </>`

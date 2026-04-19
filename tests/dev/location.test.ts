@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile, defaultOptions, devOptions } from '../utils'
+import { compile, defaultOptions, devOptions } from '../test-utils.js'
 
 describe('Dev 位置信息', () => {
   it('dev 模式注入位置信息', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile, classNameTransformOptions } from '../utils'
+import { classNameTransformOptions, compile } from '../test-utils.js'
 
 describe('Props getter 行为', () => {
   it('静态字符串属性', async () => {

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { compile } from '../utils'
+import { describe, expect, it } from 'vitest'
+import { compile } from '../test-utils.js'
 
 describe('基础元素转换', () => {
   it('转换简单的原生元素', async () => {

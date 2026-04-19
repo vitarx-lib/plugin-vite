@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { CompileOptions } from '../../src/transform.js'
-import { compile } from '../utils/index.js'
+import { compile } from '../test-utils.js'
 
 const hmrOptions: CompileOptions = {
   hmr: true,

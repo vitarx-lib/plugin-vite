@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from '../utils'
+import { compile } from '../test-utils.js'
 
 describe('指令转换', () => {
   it('v-show 指令', async () => {

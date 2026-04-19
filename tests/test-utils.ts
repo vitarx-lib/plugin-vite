@@ -1,4 +1,4 @@
-import { type CompileOptions, transform } from '../../src/transform.js'
+import { type CompileOptions, transform } from '../src/transform.js'
 
 export const defaultOptions: CompileOptions = {
   hmr: false,

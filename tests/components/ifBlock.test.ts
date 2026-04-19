@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from '../utils'
+import { compile } from '../test-utils.js'
 
 describe('IfBlock 组件', () => {
   it('IfBlock 包含 v-if 和 v-else', async () => {
