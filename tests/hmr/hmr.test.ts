@@ -41,7 +41,7 @@ describe('HMR 协议结构', () => {
       const result = await compile(code, hmrOptions)
       // 验证 __$VITARX_HMR_VIEW_NODE$__ 定义（使用 const 声明）
       expect(result).toContain(
-        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__(true)'
       )
       // 验证注册调用
       expect(result).toContain('__$VITARX_HMR$__.instance.register')
@@ -52,7 +52,7 @@ describe('HMR 协议结构', () => {
       const result = await compile(code, hmrOptions)
       // 验证 __$VITARX_HMR_VIEW_NODE$__ 定义（使用 const 声明）
       expect(result).toContain(
-        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__(true)'
       )
       // 验证注册调用
       expect(result).toContain('__$VITARX_HMR$__.instance.register')
@@ -65,7 +65,7 @@ describe('HMR 协议结构', () => {
       const result = await compile(code, hmrOptions)
       // 验证 HMR 注册代码注入
       expect(result).toContain(
-        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__(true)'
       )
       expect(result).toContain('__$VITARX_HMR$__.instance.register')
       // 验证 children 正确传递
@@ -80,7 +80,7 @@ describe('HMR 协议结构', () => {
         'import { getComponentView as __$VITARX_GET_COMPONENT_VIEW$__ } from "vitarx"'
       )
       // 验证使用别名调用
-      expect(result).toContain('__$VITARX_GET_COMPONENT_VIEW$__()')
+      expect(result).toContain('__$VITARX_GET_COMPONENT_VIEW$__(true)')
     })
 
     it('import.meta.hot.accept 只注入一次', async () => {

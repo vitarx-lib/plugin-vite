@@ -20,7 +20,7 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     t.variableDeclaration('const', [
       t.variableDeclarator(
         t.identifier(HMR.view),
-        t.callExpression(t.identifier(GET_COMPONENT_VIEW_ALIAS), [])
+        t.callExpression(t.identifier(GET_COMPONENT_VIEW_ALIAS), [t.booleanLiteral(true)])
       )
     ])
   )
@@ -94,7 +94,7 @@ export function createWrappedComponentHMRStatements(componentName: string): t.St
     t.variableDeclaration('const', [
       t.variableDeclarator(
         t.identifier(HMR.view),
-        t.callExpression(t.identifier(GET_COMPONENT_VIEW_ALIAS), [])
+        t.callExpression(t.identifier(GET_COMPONENT_VIEW_ALIAS), [t.booleanLiteral(true)])
       )
     ])
   )
