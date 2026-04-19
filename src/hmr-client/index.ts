@@ -74,10 +74,11 @@ export default class HMRManager {
    * 注册节点
    *
    * @param view - 组件视图节点
+   * @param component - 组件构造函数
    */
-  register(view: ComponentView) {
+  register(view: ComponentView, component?: Component) {
     if (!view) return
-    const component = view.component
+    component ??= view.component
     const id = this.getId(component)
     if (this.#idMapToView.has(id)) {
       this.#idMapToView.get(id)!.add(view)

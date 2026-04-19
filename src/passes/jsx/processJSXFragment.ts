@@ -12,7 +12,7 @@ import {
   filterWhitespaceChildren,
   getAlias,
   getDevLocInfo,
-  validateMatchInSwitch
+  validateNoDirectMatchChild
 } from '../../utils/index.js'
 import { processChildren } from './processChildren.js'
 
@@ -28,7 +28,7 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
   const children = filterWhitespaceChildren(node.children)
 
   // 校验 Match 组件
-  validateMatchInSwitch(children)
+  validateNoDirectMatchChild(children)
 
   // 标记需要的导入
   ctx.imports.Fragment = true
@@ -41,7 +41,8 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
   // 无子元素
   if (children.length === 0) {
     const viewCall = addPureComment(
-      createCreateViewCall(t.identifier(fragmentAlias), null, locInfo, createViewAlias)
+      createCreateViewCall(t.identifier(fragmentAlias), null, locInfo, createViewAlias),
+      ctx
     )
     if (node.loc) viewCall.loc = node.loc
     path.replaceWith(viewCall)
@@ -56,7 +57,8 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
   const props = t.objectExpression([t.objectProperty(t.identifier('children'), childrenValue)])
 
   const viewCall = addPureComment(
-    createCreateViewCall(t.identifier(fragmentAlias), props, locInfo, createViewAlias)
+    createCreateViewCall(t.identifier(fragmentAlias), props, locInfo, createViewAlias),
+    ctx
   )
   if (node.loc) viewCall.loc = node.loc
   path.replaceWith(viewCall)

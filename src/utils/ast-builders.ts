@@ -15,9 +15,6 @@ import {
 import { PURE_COMMENT } from '../constants/index.js'
 import type { TransformContext, VitarxImportAliases } from '../context.js'
 
-/** 用于追踪已添加 PURE 注释的节点 */
-const pureCommentedNodes = new WeakSet<CallExpression>()
-
 /**
  * 创建 unref 调用
  * @param argument - 参数表达式
@@ -176,13 +173,14 @@ export function createLocationObject(filename: string, loc: SourceLocation): Obj
 /**
  * 为调用表达式添加 @__PURE__ 注释
  * @param node - 调用表达式节点
+ * @param ctx - 转换上下文
  * @returns 添加注释后的节点
  */
-export function addPureComment<T extends CallExpression>(node: T): T {
-  if (pureCommentedNodes.has(node)) {
+export function addPureComment<T extends CallExpression>(node: T, ctx: TransformContext): T {
+  if (ctx.pureCommentedNodes.has(node)) {
     return node
   }
-  pureCommentedNodes.add(node)
+  ctx.pureCommentedNodes.add(node)
   t.addComment(node, 'leading', ` ${PURE_COMMENT} `, false)
   return node
 }

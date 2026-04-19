@@ -8,6 +8,7 @@ import { parse, type ParserOptions } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
 import { createContext, type TransformContext } from './context.js'
+import type { CompileOptions } from './types.js'
 import {
   collectExistingImports,
   collectLocalBindings,
@@ -29,18 +30,6 @@ import {
 } from './utils/index.js'
 
 export interface TransformResult extends GeneratorResult {}
-
-export interface CompileOptions {
-  hmr: boolean
-  dev: boolean
-  ssr: boolean
-  runtimeModule: string
-  sourceMap: boolean | 'inline' | 'both'
-  transformClassNameToClass: boolean
-}
-
-/** 用于追踪已处理的节点 */
-const processedNodes = new WeakSet<t.Node>()
 
 /**
  * 创建解析器选项
@@ -93,6 +82,10 @@ function setupAliases(ctx: TransformContext, program: t.Program): void {
   if (ctx.options.hmr) {
     ctx.vitarxAliases.createView = generateUniqueAlias('jsxDEV', allNames)
   }
+
+  if (vitarxImports.has('builder')) {
+    ctx.builderAlias = vitarxImports.get('builder')!
+  }
 }
 
 /**
@@ -112,18 +105,18 @@ function transformAST(ast: t.File, ctx: TransformContext): void {
   babelTraverse(ast, {
     JSXElement: {
       enter(path) {
-        if (processedNodes.has(path.node)) return
+        if (ctx.processedNodes.has(path.node)) return
         const name = getJSXElementName(path.node)
         if (name && isPureCompileComponent(name)) {
-          processedNodes.add(path.node)
+          ctx.processedNodes.add(path.node)
           processPureCompileComponent(path, ctx)
         }
       },
       exit(path) {
-        if (processedNodes.has(path.node)) return
+        if (ctx.processedNodes.has(path.node)) return
         const name = getJSXElementName(path.node)
         if (name && isPureCompileComponent(name)) return
-        processedNodes.add(path.node)
+        ctx.processedNodes.add(path.node)
         processJSXElement(path, ctx)
       }
     },
@@ -132,8 +125,8 @@ function transformAST(ast: t.File, ctx: TransformContext): void {
         processVIfChain(path, ctx, transformJSXElement)
       },
       exit(path) {
-        if (processedNodes.has(path.node)) return
-        processedNodes.add(path.node)
+        if (ctx.processedNodes.has(path.node)) return
+        ctx.processedNodes.add(path.node)
         processJSXFragment(path, ctx)
       }
     }
@@ -181,7 +174,7 @@ export async function transform(
 
   collectRefInfo(ctx, ast.program)
 
-  const components = collectComponentFunctions(ast.program)
+  const components = collectComponentFunctions(ast.program, ctx.builderAlias)
 
   transformAST(ast, ctx)
 

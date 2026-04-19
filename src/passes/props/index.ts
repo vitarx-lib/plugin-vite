@@ -6,21 +6,13 @@
 import * as t from '@babel/types'
 import { TransformContext } from '../../context.js'
 import { createError } from '../../error.js'
-import { isNativeElement } from '../../utils/index.js'
+import { getJSXElementName, isNativeElement } from '../../utils/index.js'
 import { createProperty, getAttributeValue, processAttribute, processSpreadAttribute } from './attribute.js'
 import type { DirectiveInfo, PropsResult, VModelState } from './types.js'
 import { createVModelProps, extractVModelState } from './vmodel.js'
 
 // 导出类型定义
 export type { AttributeResult, PropsResult, VModelState } from './types.js'
-
-/**
- * 获取 JSX 元素的名称
- */
-function getJSXElementName(node: t.JSXElement): string | null {
-  const nameNode = node.openingElement.name
-  return nameNode.type === 'JSXIdentifier' ? nameNode.name : null
-}
 
 /**
  * 校验 class 和 className 不能同时存在

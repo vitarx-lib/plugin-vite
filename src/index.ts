@@ -7,7 +7,8 @@ import {
   type transformWithOxc,
   version
 } from 'vite'
-import { type CompileOptions, shouldTransform, transform } from './transform.js'
+import { shouldTransform, transform } from './transform.js'
+import type { CompileOptions } from './types.js'
 // 编译宏组件类型导出
 export type * from './types.js'
 

@@ -47,7 +47,7 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const conditionExpr = buildNestedCondition(conditions, ctx, useRef)
   const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
 
-  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias, locInfo))
+  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias, locInfo), ctx)
 }
 
 /**

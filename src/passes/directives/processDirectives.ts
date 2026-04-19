@@ -36,7 +36,7 @@ export function processDirectives(
 
   markImport(ctx, 'withDirectives')
   const withDirectivesAlias = getAlias(ctx.vitarxAliases, 'withDirectives')
-  return addPureComment(createWithDirectivesCall(viewCall, directiveArray, withDirectivesAlias))
+  return addPureComment(createWithDirectivesCall(viewCall, directiveArray, withDirectivesAlias), ctx)
 }
 
 /**

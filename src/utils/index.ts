@@ -20,7 +20,7 @@ export {
   filterWhitespaceChildren,
   hasEffectiveChildren,
   filterEffectiveChildren,
-  validateMatchInSwitch
+  validateNoDirectMatchChild
 } from './jsx-helpers.js'
 
 // AST 构建函数

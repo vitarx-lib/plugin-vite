@@ -3,9 +3,9 @@
  * 定义编译转换过程中的上下文数据结构
  * @module context
  */
-import type { File } from '@babel/types'
+import type { CallExpression, File } from '@babel/types'
 import type { CompilerWarning } from './error.js'
-import type { CompileOptions } from './transform.js'
+import type { CompileOptions } from './types.js'
 
 /**
  * 导入信息
@@ -84,6 +84,12 @@ export interface TransformContext {
   refVariables: Set<string>
   /** UI API 别名集合（用于 HMR 代码分离识别） */
   uiApiAliases: Set<string>
+  /** builder 函数的本地别名（用于识别纯构建组件） */
+  builderAlias: string | null
+  /** 已处理的 AST 节点追踪集合 */
+  processedNodes: WeakSet<any>
+  /** 已添加 PURE 注释的节点追踪集合 */
+  pureCommentedNodes: WeakSet<CallExpression>
   /** 编译警告列表 */
   warnings: CompilerWarning[]
 }
@@ -139,6 +145,9 @@ export function createContext(
     },
     refVariables: new Set(),
     uiApiAliases: new Set(),
+    builderAlias: null,
+    processedNodes: new WeakSet(),
+    pureCommentedNodes: new WeakSet(),
     warnings: []
   }
 }

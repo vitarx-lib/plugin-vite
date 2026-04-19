@@ -223,10 +223,11 @@ export function filterEffectiveChildren(node: JSXElement): t.Node[] {
 }
 
 /**
- * 校验 Match 组件必须在 Switch 内使用
+ * 校验子节点中不能直接包含 Match 组件
+ * Match 必须在 Switch 内使用，非 Switch 元素的子节点中不允许出现 Match
  * @param children - 子节点数组
  */
-export function validateMatchInSwitch(children: t.Node[]): void {
+export function validateNoDirectMatchChild(children: t.Node[]): void {
   for (const child of children) {
     if (isJSXElement(child)) {
       const childName = getJSXElementName(child)

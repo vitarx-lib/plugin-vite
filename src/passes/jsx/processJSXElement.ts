@@ -127,7 +127,7 @@ export function transformJSXElement(
   if (directives.size > 0) {
     viewCall = processDirectives(viewCall, directives, ctx)
   } else {
-    viewCall = addPureComment(viewCall)
+    viewCall = addPureComment(viewCall, ctx)
   }
 
   if (node.loc) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_EXPORT_BASE_NAME } from '../../src/constants/index.js'
-import type { CompileOptions } from '../../src/transform.js'
+import type { CompileOptions } from '../../src/types.js'
 import { compile } from '../test-utils.js'
 
 describe('HMR 协议结构', () => {

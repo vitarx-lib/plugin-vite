@@ -1,5 +1,17 @@
 import type { RenderUnit, View } from 'vitarx'
 
+/**
+ * 编译选项
+ */
+export interface CompileOptions {
+  hmr: boolean
+  dev: boolean
+  ssr: boolean
+  runtimeModule: string
+  sourceMap: boolean | 'inline' | 'both'
+  transformClassNameToClass: boolean
+}
+
 export interface IfBlockProps {
   /**
    * 子元素列表

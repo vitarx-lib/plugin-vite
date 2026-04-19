@@ -50,7 +50,7 @@ function handleLogicalExpression(
   markImport(ctx, 'dynamic')
   const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
   const locInfo = loc ? getDevLocInfo(ctx, { loc }) : null
-  return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo))
+  return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo), ctx)
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { CompileOptions } from '../../src/transform.js'
+import type { CompileOptions } from '../../src/types.js'
 import { compile } from '../test-utils.js'
 
 const hmrOptions: CompileOptions = {
@@ -7,7 +7,8 @@ const hmrOptions: CompileOptions = {
   dev: true,
   ssr: false,
   runtimeModule: 'vitarx',
-  sourceMap: false
+  sourceMap: false,
+  transformClassNameToClass: false
 }
 
 const normalOptions: CompileOptions = {
@@ -15,7 +16,8 @@ const normalOptions: CompileOptions = {
   dev: false,
   ssr: false,
   runtimeModule: 'vitarx',
-  sourceMap: false
+  sourceMap: false,
+  transformClassNameToClass: false
 }
 
 describe('验证可能出现的导入语句注入BUG', () => {
