@@ -31,9 +31,7 @@
     "forceConsistentCasingInFileNames": true,
     // 允许使用类字段
     "useDefineForClassFields": true,
-    "types": ["node","vite/client"],
-    "outDir": "dist"
+    "types": ["node", "vite/client"]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "tests"]
 }
