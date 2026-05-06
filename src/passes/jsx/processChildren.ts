@@ -6,7 +6,6 @@
 import * as t from '@babel/types'
 import {
   isBinaryExpression,
-  isBooleanLiteral,
   isConditionalExpression,
   isIdentifier,
   isJSXElement,
@@ -14,9 +13,7 @@ import {
   isJSXFragment,
   isJSXText,
   isLogicalExpression,
-  isMemberExpression,
-  isNumericLiteral,
-  isStringLiteral
+  isMemberExpression
 } from '@babel/types'
 import { markImport, TransformContext } from '../../context.js'
 import {
@@ -28,7 +25,7 @@ import {
 } from '../../utils/index.js'
 
 /**
- * 处理成员表达式
+ * 处理成员表达式，生成 accessor 调用
  */
 function handleMemberExpression(expr: t.MemberExpression, ctx: TransformContext): t.CallExpression {
   markImport(ctx, 'accessor')
@@ -37,21 +34,13 @@ function handleMemberExpression(expr: t.MemberExpression, ctx: TransformContext)
 }
 
 /**
- * 处理逻辑表达式
+ * 使用 expr 包装表达式
+ * 用于逻辑表达式、二元表达式和调用表达式的统一包装
+ * 运行时根据返回值类型决定是否跟踪响应式：
+ * - 数组返回值：原样返回（仅渲染一次）
+ * - 其他返回值：创建 DynamicView 追踪
  */
-function handleLogicalExpression(
-  expr: t.LogicalExpression,
-  ctx: TransformContext
-): t.CallExpression {
-  markImport(ctx, 'expr')
-  const exprAlias = getAlias(ctx.vitarxAliases, 'expr')
-  return addPureComment(createExprCall(expr, exprAlias), ctx)
-}
-
-/**
- * 处理二元表达式
- */
-function handleBinaryExpression(expr: t.BinaryExpression, ctx: TransformContext): t.CallExpression {
+function wrapWithExpr(expr: t.Expression, ctx: TransformContext): t.CallExpression {
   markImport(ctx, 'expr')
   const exprAlias = getAlias(ctx.vitarxAliases, 'expr')
   return addPureComment(createExprCall(expr, exprAlias), ctx)
@@ -78,71 +67,42 @@ export function processChildren(children: t.Node[], ctx: TransformContext): t.Ex
 
 /**
  * 处理单个子节点
+ * JSX 容器节点在此拆包后委托给 processChildExpression 处理
+ * 已转换的 API 调用（createView/branch 等 CallExpression）直接透传
  */
 function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | null {
-  // JSX 文本
   if (isJSXText(node)) {
     const trimmed = node.value.trim()
     if (!trimmed) return null
     return t.stringLiteral(trimmed)
   }
 
-  // JSX 表达式容器
   if (isJSXExpressionContainer(node)) {
     if (node.expression.type === 'JSXEmptyExpression') return null
     return processChildExpression(node.expression as t.Expression, ctx)
   }
 
-  // JSX 展开子元素
   if (node.type === 'JSXSpreadChild') {
     return processChildExpression(node.expression, ctx)
   }
 
-  // JSX 元素或片段
   if (isJSXElement(node) || isJSXFragment(node)) {
     return node as t.Expression
   }
 
-  // 字面量
-  if (isStringLiteral(node) || isNumericLiteral(node) || isBooleanLiteral(node)) {
-    return node
-  }
-
-  // 标识符
-  if (isIdentifier(node)) {
-    return node
-  }
-
-  // 成员表达式
-  if (isMemberExpression(node)) {
-    return handleMemberExpression(node, ctx)
-  }
-
-  // 条件表达式
-  if (isConditionalExpression(node)) {
-    return processConditionalExpression(node, ctx)
-  }
-
-  // 逻辑表达式
-  if (isLogicalExpression(node)) {
-    return handleLogicalExpression(node, ctx)
-  }
-
-  // 二元表达式
-  if (isBinaryExpression(node)) {
-    return handleBinaryExpression(node, ctx)
-  }
-
-  // 调用表达式
+  // 已转换的 API 调用（createView/branch 等）直接透传，不包装 expr
   if (node.type === 'CallExpression') {
-    return node as t.Expression
+    return node
   }
 
-  return node as t.Expression
+  // 其他表达式类型委托给 processChildExpression
+  return processChildExpression(node as t.Expression, ctx)
 }
 
 /**
- * 处理子表达式
+ * 处理子表达式（来自 JSX 表达式容器或条件分支）
+ * 根据表达式类型生成对应的运行时 API 调用
+ * CallExpression 在此用 expr 包装（用户函数调用需要响应式追踪）
  */
 function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Expression {
   if (isIdentifier(expr)) {
@@ -157,20 +117,15 @@ function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Ex
     return processConditionalExpression(expr, ctx)
   }
 
-  if (isLogicalExpression(expr)) {
-    return handleLogicalExpression(expr, ctx)
-  }
-
-  if (isBinaryExpression(expr)) {
-    return handleBinaryExpression(expr, ctx)
+  if (isLogicalExpression(expr) || isBinaryExpression(expr) || expr.type === 'CallExpression') {
+    return wrapWithExpr(expr, ctx)
   }
 
   return expr
 }
 
 /**
- * 处理条件表达式
- * 转换为 branch 调用
+ * 处理条件表达式，转换为 branch 调用
  */
 function processConditionalExpression(
   node: t.ConditionalExpression,

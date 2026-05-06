@@ -68,13 +68,13 @@ describe('Children 处理', () => {
     `)
   })
 
-  it('CallExpression 子元素保持不变', async () => {
+  it('CallExpression 子元素生成 expr', async () => {
     const code = `const App = () => <div>{render()}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: render()
+        children: /* @__PURE__ */expr(() => render())
       });"
     `)
   })
@@ -161,11 +161,11 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{items.map(item => <span>{item}</span>)}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: items.map(item => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */expr(() => items.map(item => /* @__PURE__ */createView("span", {
           children: item
-        }))
+        })))
       });"
     `)
   })
@@ -301,9 +301,9 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{render(a, b, c)}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: render(a, b, c)
+        children: /* @__PURE__ */expr(() => render(a, b, c))
       });"
     `)
   })
@@ -312,9 +312,125 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{props.items.filter(x => x.active).map(x => x.name)}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: props.items.filter(x => x.active).map(x => x.name)
+        children: /* @__PURE__ */expr(() => props.items.filter(x => x.active).map(x => x.name))
+      });"
+    `)
+  })
+})
+
+describe('数组方法调用', () => {
+  it('map 方法返回 JSX', async () => {
+    const code = `const App = () => <ul>{items.map(item => <li>{item}</li>)}</ul>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("ul", {
+        children: /* @__PURE__ */expr(() => items.map(item => /* @__PURE__ */createView("li", {
+          children: item
+        })))
+      });"
+    `)
+  })
+
+  it('map 方法返回文本', async () => {
+    const code = `const App = () => <div>{items.map(item => item.name)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.map(item => item.name))
+      });"
+    `)
+  })
+
+  it('filter + map 链式调用', async () => {
+    const code = `const App = () => <div>{items.filter(x => x.active).map(x => <span>{x.name}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr, accessor } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.filter(x => x.active).map(x => /* @__PURE__ */createView("span", {
+          children: accessor(x, "name")
+        })))
+      });"
+    `)
+  })
+
+  it('flatMap 方法调用', async () => {
+    const code = `const App = () => <div>{items.flatMap(item => <span>{item}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.flatMap(item => /* @__PURE__ */createView("span", {
+          children: item
+        })))
+      });"
+    `)
+  })
+
+  it('slice 方法调用', async () => {
+    const code = `const App = () => <div>{items.slice(0, 5).map(x => <span>{x}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.slice(0, 5).map(x => /* @__PURE__ */createView("span", {
+          children: x
+        })))
+      });"
+    `)
+  })
+
+  it('find 方法调用', async () => {
+    const code = `const App = () => <div>{items.find(x => x.id === 1)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.find(x => x.id === 1))
+      });"
+    `)
+  })
+
+  it('reduce 方法调用', async () => {
+    const code = `const App = () => <div>{items.reduce((acc, cur) => acc + cur, 0)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.reduce((acc, cur) => acc + cur, 0))
+      });"
+    `)
+  })
+
+  it('map 带索引参数', async () => {
+    const code = `const App = () => <div>{items.map((item, index) => <span key={index}>{item}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.map((item, index) => /* @__PURE__ */createView("span", {
+          get "key"() {
+            return unref(index);
+          },
+          children: item
+        })))
+      });"
+    `)
+  })
+
+  it('成员表达式上的 map 调用', async () => {
+    const code = `const App = () => <div>{props.items.map(item => <span>{item}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => props.items.map(item => /* @__PURE__ */createView("span", {
+          children: item
+        })))
       });"
     `)
   })

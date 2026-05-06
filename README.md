@@ -222,6 +222,30 @@ import.meta.hot.accept(mod => {
 2. **被导出** - 使用 `export` 导出
 3. **包含 JSX** - 函数体内包含 JSX 语法或返回编译宏组件
 
+### HMR 代码分离
+
+HMR 在检测到组件更新时，会将组件代码分离为 **UI 代码** 和 **逻辑代码** 两部分：
+
+- **UI 代码**：`createView`、`branch`、`expr`、`accessor`、`dynamic`、`withDirectives` 等调用
+- **逻辑代码**：其余所有代码
+
+仅逻辑代码变化时，组件完全重新挂载；仅 UI 代码变化时，仅重建视图树。
+
+### 开发模式位置信息
+
+开发模式下，`createView` 调用会注入位置信息参数（用于调试），`branch`、`expr`、`accessor` 不注入：
+
+```javascript
+// dev 模式
+createView("div", { children: "hello" }, { fileName: "App.tsx", lineNumber: 5, columnNumber: 10 })
+expr(() => a && b)  // 无位置信息
+branch(() => unref(show) ? 0 : 1)  // 无位置信息
+accessor(props, "value")  // 无位置信息
+
+// 生产模式
+createView("div", { children: "hello" })  // 无位置信息
+```
+
 ## 子元素处理
 
 ### 响应式子元素
@@ -230,18 +254,54 @@ import.meta.hot.accept(mod => {
 // 标识符保持原样
 <div>{value}</div>
 
-// 成员表达式使用 access
+// 成员表达式使用 accessor
 <div>{props.value}</div>
-// 编译为: access(props, 'value')
+// 编译为: accessor(props, 'value')
 
 // 条件表达式使用 branch
 <div>{show ? 'yes' : 'no'}</div>
 // 编译为: branch(() => unref(show) ? 0 : 1, [...])
 
-// 逻辑表达式使用 dynamic
+// 逻辑表达式使用 expr
 <div>{a && b}</div>
-// 编译为: dynamic(() => a && b)
+// 编译为: expr(() => a && b)
+
+// 二元表达式使用 expr
+<div>{count + 1}</div>
+// 编译为: expr(() => count + 1)
+
+// 函数调用使用 expr
+<div>{render()}</div>
+// 编译为: expr(() => render())
 ```
+
+### expr 与数组返回值
+
+`expr` 底层由 `DynamicView` 渲染。当 `expr` 中的表达式返回数组时（如 `arr.map()`），运行时会自动检测并原样返回数组（仅渲染一次，不跟踪响应式）。推荐使用 `For` 组件实现动态数组的响应式渲染。
+
+```jsx
+// arr.map() 返回数组，expr 运行时原样返回（仅渲染一次）
+<div>{items.map(item => <span>{item}</span>)}</div>
+// 编译为: expr(() => items.map(item => createView("span", { children: item })))
+
+// 推荐：使用 For 组件实现响应式数组渲染
+<div>
+  <For each={items} key="id">{item => <span>{item}</span>}</For>
+</div>
+```
+
+### 运行时 API 说明
+
+| API              | 用途      | 编译器注入     | HMR 识别为 UI 代码 |
+|------------------|---------|-----------|---------------|
+| `createView`     | 创建视图节点  | ✅         | ✅             |
+| `branch`         | 条件分支渲染  | ✅         | ✅             |
+| `expr`           | 动态表达式包装 | ✅         | ✅             |
+| `accessor`       | 属性访问追踪  | ✅         | ✅             |
+| `dynamic`        | 动态值包装   | ❌（用户手动使用） | ✅             |
+| `withDirectives` | 指令绑定    | ✅         | ✅             |
+
+> **注意：** `expr` 是编译器插桩注入的辅助函数，用于包装逻辑/二元/调用表达式；`dynamic` 是运行时独立 API，供用户手动使用。两者在 HMR 代码分离时均被视为 UI 描述代码。
 
 ## API 参考
 
