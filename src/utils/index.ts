@@ -26,8 +26,8 @@ export {
 // AST 构建函数
 export {
   createUnrefCall,
-  createAccessCall,
-  createDynamicCall,
+  createAccessorCall,
+  createExprCall,
   createBranchCall,
   createCreateViewCall,
   createWithDirectivesCall,

@@ -591,7 +591,7 @@ describe('HMR 协议结构', () => {
       expect(getComponentViewCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('HMR 模式下也支持 dev 模式的位置信息', async () => {
+    it('HMR 模式下 dev 模式 createView 注入位置信息', async () => {
       const code = `export const App = () => <div></div>`
       const result = await compile(code, hmrOptions)
       expect(result).toContain('fileName')
@@ -613,11 +613,8 @@ export default function DynamicList(): View {
   )
 }`
       const result = await compile(code, hmrOptions)
-      // div 应该在第 6 行
       expect(result).toContain('lineNumber: 6')
-      // ul 应该在第 7 行
       expect(result).toContain('lineNumber: 7')
-      // For 应该在第 8 行
       expect(result).toContain('lineNumber: 8')
     })
 

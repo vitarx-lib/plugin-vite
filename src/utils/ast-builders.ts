@@ -9,9 +9,9 @@ import {
   type Expression,
   isIdentifier,
   isStringLiteral,
-  type ObjectExpression,
-  type SourceLocation
+  type ObjectExpression
 } from '@babel/types'
+import type { SourceLocation } from 'acorn'
 import { PURE_COMMENT } from '../constants/index.js'
 import type { TransformContext, VitarxImportAliases } from '../context.js'
 
@@ -26,13 +26,13 @@ export function createUnrefCall(argument: Expression, alias?: string): CallExpre
 }
 
 /**
- * 创建 access 调用
+ * 创建 accessor 调用
  * @param object - 对象表达式
  * @param key - 键表达式
- * @param alias - access 别名
+ * @param alias - accessor 别名
  * @returns CallExpression
  */
-export function createAccessCall(
+export function createAccessorCall(
   object: Expression,
   key: Expression,
   alias?: string
@@ -46,28 +46,17 @@ export function createAccessCall(
     keyArg = key
   }
 
-  return t.callExpression(t.identifier(alias || 'access'), [object, keyArg])
+  return t.callExpression(t.identifier(alias || 'accessor'), [object, keyArg])
 }
 
 /**
- * 创建 dynamic 调用
+ * 创建 expr 调用
  * @param argument - 参数表达式
- * @param alias - dynamic 别名
- * @param locInfo - 位置信息对象
+ * @param alias - expr 别名
  * @returns CallExpression
  */
-export function createDynamicCall(
-  argument: Expression,
-  alias?: string,
-  locInfo?: ObjectExpression | null
-): CallExpression {
-  const args: Expression[] = [t.arrowFunctionExpression([], argument)]
-
-  if (locInfo) {
-    args.push(locInfo)
-  }
-
-  return t.callExpression(t.identifier(alias || 'dynamic'), args)
+export function createExprCall(argument: Expression, alias?: string): CallExpression {
+  return t.callExpression(t.identifier(alias || 'expr'), [t.arrowFunctionExpression([], argument)])
 }
 
 /**
@@ -75,22 +64,14 @@ export function createDynamicCall(
  * @param condition - 条件函数
  * @param branches - 分支函数数组
  * @param alias - branch 别名
- * @param locInfo - 位置信息对象
  * @returns CallExpression
  */
 export function createBranchCall(
   condition: ArrowFunctionExpression,
   branches: ArrowFunctionExpression[],
-  alias?: string,
-  locInfo?: ObjectExpression | null
+  alias?: string
 ): CallExpression {
-  const args: Expression[] = [condition, t.arrayExpression(branches)]
-
-  if (locInfo) {
-    args.push(locInfo)
-  }
-
-  return t.callExpression(t.identifier(alias || 'branch'), args)
+  return t.callExpression(t.identifier(alias || 'branch'), [condition, t.arrayExpression(branches)])
 }
 
 /**
@@ -109,15 +90,12 @@ export function createCreateViewCall(
 ): CallExpression {
   const args: Expression[] = [type]
 
-  // props 参数
   if (props) {
     args.push(props)
   } else if (locInfo) {
-    // 如果有 locInfo 但没有 props，需要传 null
     args.push(t.nullLiteral())
   }
 
-  // locInfo 参数
   if (locInfo) {
     args.push(locInfo)
   }
@@ -157,20 +135,6 @@ export function createArrowFunction(body: Expression): ArrowFunctionExpression {
 }
 
 /**
- * 创建位置信息对象
- * @param filename - 文件名
- * @param loc - 源码位置
- * @returns ObjectExpression
- */
-export function createLocationObject(filename: string, loc: SourceLocation): ObjectExpression {
-  return t.objectExpression([
-    t.objectProperty(t.identifier('fileName'), t.stringLiteral(filename)),
-    t.objectProperty(t.identifier('lineNumber'), t.numericLiteral(loc.start.line)),
-    t.objectProperty(t.identifier('columnNumber'), t.numericLiteral(loc.start.column + 1))
-  ])
-}
-
-/**
  * 为调用表达式添加 @__PURE__ 注释
  * @param node - 调用表达式节点
  * @param ctx - 转换上下文
@@ -193,6 +157,20 @@ export function addPureComment<T extends CallExpression>(node: T, ctx: Transform
  */
 export function getAlias(aliases: VitarxImportAliases, name: keyof VitarxImportAliases): string {
   return aliases[name] || name
+}
+
+/**
+ * 创建位置信息对象
+ * @param filename - 文件名
+ * @param loc - 源码位置
+ * @returns ObjectExpression
+ */
+export function createLocationObject(filename: string, loc: SourceLocation): ObjectExpression {
+  return t.objectExpression([
+    t.objectProperty(t.identifier('fileName'), t.stringLiteral(filename)),
+    t.objectProperty(t.identifier('lineNumber'), t.numericLiteral(loc.start.line)),
+    t.objectProperty(t.identifier('columnNumber'), t.numericLiteral(loc.start.column + 1))
+  ])
 }
 
 /**

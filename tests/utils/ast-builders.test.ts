@@ -1,33 +1,32 @@
-import { describe, expect, it } from 'vitest'
 import {
   identifier,
-  stringLiteral,
-  numericLiteral,
+  nullLiteral,
   objectExpression,
   objectProperty,
-  nullLiteral
+  stringLiteral
 } from '@babel/types'
+import { describe, expect, it } from 'vitest'
+import type { TransformContext, VitarxImportAliases } from '../../src/context.js'
 import {
-  createUnrefCall,
-  createAccessCall,
-  createDynamicCall,
+  addPureComment,
+  createAccessorCall,
+  createArrowFunction,
   createBranchCall,
   createCreateViewCall,
-  createWithDirectivesCall,
-  createArrowFunction,
+  createExprCall,
   createLocationObject,
-  addPureComment,
+  createUnrefCall,
+  createWithDirectivesCall,
   getAlias
 } from '../../src/utils/ast-builders.js'
-import type { VitarxImportAliases, TransformContext } from '../../src/context.js'
 
 function createAliases(partial: Partial<VitarxImportAliases> = {}): VitarxImportAliases {
   return {
     createView: null,
     Fragment: null,
     branch: null,
-    dynamic: null,
-    access: null,
+    expr: null,
+    accessor: null,
     withDirectives: null,
     unref: null,
     isRef: null,
@@ -59,61 +58,53 @@ describe('ast-builders', () => {
     })
   })
 
-  describe('createAccessCall', () => {
-    it('创建 access 调用（标识符键）', () => {
+  describe('createAccessorCall', () => {
+    it('创建 accessor 调用（标识符键）', () => {
       const obj = identifier('state')
       const key = identifier('name')
-      const call = createAccessCall(obj, key)
+      const call = createAccessorCall(obj, key)
       expect(call.type).toBe('CallExpression')
-      expect((call.callee as any).name).toBe('access')
+      expect((call.callee as any).name).toBe('accessor')
       expect(call.arguments.length).toBe(2)
       expect(call.arguments[0]).toBe(obj)
       expect((call.arguments[1] as any).type).toBe('StringLiteral')
       expect((call.arguments[1] as any).value).toBe('name')
     })
 
-    it('创建 access 调用（字符串键）', () => {
+    it('创建 accessor 调用（字符串键）', () => {
       const obj = identifier('state')
       const key = stringLiteral('name')
-      const call = createAccessCall(obj, key)
+      const call = createAccessorCall(obj, key)
       expect((call.arguments[1] as any).value).toBe('name')
     })
 
-    it('创建 access 调用（有别名）', () => {
+    it('创建 accessor 调用（有别名）', () => {
       const obj = identifier('state')
       const key = identifier('name')
-      const call = createAccessCall(obj, key, '_access')
-      expect((call.callee as any).name).toBe('_access')
+      const call = createAccessorCall(obj, key, '_accessor')
+      expect((call.callee as any).name).toBe('_accessor')
     })
   })
 
-  describe('createDynamicCall', () => {
-    it('创建 dynamic 调用（无位置信息）', () => {
+  describe('createExprCall', () => {
+    it('创建 expr 调用', () => {
       const arg = identifier('value')
-      const call = createDynamicCall(arg)
+      const call = createExprCall(arg)
       expect(call.type).toBe('CallExpression')
-      expect((call.callee as any).name).toBe('dynamic')
+      expect((call.callee as any).name).toBe('expr')
       expect(call.arguments.length).toBe(1)
       expect((call.arguments[0] as any).type).toBe('ArrowFunctionExpression')
     })
 
-    it('创建 dynamic 调用（有位置信息）', () => {
+    it('创建 expr 调用（有别名）', () => {
       const arg = identifier('value')
-      const locInfo = objectExpression([])
-      const call = createDynamicCall(arg, undefined, locInfo)
-      expect(call.arguments.length).toBe(2)
-      expect(call.arguments[1]).toBe(locInfo)
-    })
-
-    it('创建 dynamic 调用（有别名）', () => {
-      const arg = identifier('value')
-      const call = createDynamicCall(arg, '_dynamic')
-      expect((call.callee as any).name).toBe('_dynamic')
+      const call = createExprCall(arg, '_expr')
+      expect((call.callee as any).name).toBe('_expr')
     })
   })
 
   describe('createBranchCall', () => {
-    it('创建 branch 调用（无位置信息）', () => {
+    it('创建 branch 调用', () => {
       const condition = createArrowFunction(identifier('show'))
       const branches = [createArrowFunction(identifier('a')), createArrowFunction(identifier('b'))]
       const call = createBranchCall(condition, branches)
@@ -122,15 +113,6 @@ describe('ast-builders', () => {
       expect(call.arguments.length).toBe(2)
       expect(call.arguments[0]).toBe(condition)
       expect((call.arguments[1] as any).type).toBe('ArrayExpression')
-    })
-
-    it('创建 branch 调用（有位置信息）', () => {
-      const condition = createArrowFunction(identifier('show'))
-      const branches = [createArrowFunction(identifier('a'))]
-      const locInfo = objectExpression([])
-      const call = createBranchCall(condition, branches, undefined, locInfo)
-      expect(call.arguments.length).toBe(3)
-      expect(call.arguments[2]).toBe(locInfo)
     })
 
     it('创建 branch 调用（有别名）', () => {
@@ -277,11 +259,11 @@ describe('ast-builders', () => {
       const aliases = createAliases({
         createView: '_createView',
         branch: '_branch',
-        dynamic: '_dynamic'
+        expr: '_expr'
       })
       expect(getAlias(aliases, 'createView')).toBe('_createView')
       expect(getAlias(aliases, 'branch')).toBe('_branch')
-      expect(getAlias(aliases, 'dynamic')).toBe('_dynamic')
+      expect(getAlias(aliases, 'expr')).toBe('_expr')
     })
   })
 })

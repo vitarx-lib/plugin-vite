@@ -33,8 +33,8 @@ function createMockContext(): TransformContext {
       createView: false,
       Fragment: false,
       branch: false,
-      dynamic: false,
-      access: false,
+      expr: false,
+      accessor: false,
       withDirectives: false,
       unref: false,
       isRef: false
@@ -44,8 +44,8 @@ function createMockContext(): TransformContext {
       createView: null,
       Fragment: null,
       branch: null,
-      dynamic: null,
-      access: null,
+      expr: null,
+      accessor: null,
       withDirectives: null,
       unref: null,
       isRef: null
@@ -58,7 +58,6 @@ function createMockContext(): TransformContext {
       computed: null
     },
     refVariables: new Set(),
-    uiApiAliases: new Set(),
     builderAlias: null,
     processedNodes: new WeakSet(),
     pureCommentedNodes: new WeakSet(),
@@ -187,19 +186,6 @@ describe('branch-factory', () => {
       expect(call.leadingComments).toBeDefined()
       expect(call.leadingComments?.[0]?.value).toContain('__PURE__')
     })
-
-    it('有位置信息时传入 locInfo', () => {
-      const ctx = createMockContext()
-      const locInfo = { type: 'ObjectExpression', properties: [] } as any
-      const config = {
-        conditions: [identifier('show')],
-        branches: [arrowFunctionExpression([], identifier('a'))],
-        locInfo
-      }
-      const call = createBranch(config, ctx)
-      expect(call.arguments.length).toBe(3)
-      expect(call.arguments[2]).toBe(locInfo)
-    })
   })
 
   describe('createBinaryBranch', () => {
@@ -215,20 +201,6 @@ describe('branch-factory', () => {
       const ctx = createMockContext()
       const call = createBinaryBranch(stringLiteral('test'), identifier('a'), identifier('b'), ctx)
       expect(ctx.imports.unref).toBe(false)
-    })
-
-    it('有位置信息时传入 locInfo', () => {
-      const ctx = createMockContext()
-      const locInfo = { type: 'ObjectExpression', properties: [] } as any
-      const call = createBinaryBranch(
-        identifier('show'),
-        identifier('a'),
-        identifier('b'),
-        ctx,
-        locInfo
-      )
-      expect(call.arguments.length).toBe(3)
-      expect(call.arguments[2]).toBe(locInfo)
     })
   })
 })

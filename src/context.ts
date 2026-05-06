@@ -18,10 +18,10 @@ export interface ImportInfo {
   Fragment: boolean
   /** branch - 条件分支函数 */
   branch: boolean
-  /** dynamic - 动态值包装函数 */
-  dynamic: boolean
-  /** access - 属性访问函数 */
-  access: boolean
+  /** expr - 动态表达式包装函数 */
+  expr: boolean
+  /** accessor - 属性访问函数 */
+  accessor: boolean
   /** withDirectives - 指令包装函数 */
   withDirectives: boolean
   /** unref - ref 解包函数 */
@@ -38,8 +38,8 @@ export interface VitarxImportAliases {
   createView: string | null
   Fragment: string | null
   branch: string | null
-  dynamic: string | null
-  access: string | null
+  expr: string | null
+  accessor: string | null
   withDirectives: string | null
   unref: string | null
   isRef: string | null
@@ -82,8 +82,6 @@ export interface TransformContext {
   refApiAliases: RefApiAliases
   /** ref 变量名集合 */
   refVariables: Set<string>
-  /** UI API 别名集合（用于 HMR 代码分离识别） */
-  uiApiAliases: Set<string>
   /** builder 函数的本地别名（用于识别纯构建组件） */
   builderAlias: string | null
   /** 已处理的 AST 节点追踪集合 */
@@ -119,8 +117,8 @@ export function createContext(
       createView: false,
       Fragment: false,
       branch: false,
-      dynamic: false,
-      access: false,
+      expr: false,
+      accessor: false,
       withDirectives: false,
       unref: false,
       isRef: false
@@ -130,8 +128,8 @@ export function createContext(
       createView: null,
       Fragment: null,
       branch: null,
-      dynamic: null,
-      access: null,
+      expr: null,
+      accessor: null,
       withDirectives: null,
       unref: null,
       isRef: null
@@ -144,7 +142,6 @@ export function createContext(
       computed: null
     },
     refVariables: new Set(),
-    uiApiAliases: new Set(),
     builderAlias: null,
     processedNodes: new WeakSet(),
     pureCommentedNodes: new WeakSet(),

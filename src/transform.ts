@@ -64,8 +64,8 @@ function setupAliases(ctx: TransformContext, program: t.Program): void {
     'createView',
     'Fragment',
     'branch',
-    'dynamic',
-    'access',
+    'expr',
+    'accessor',
     'withDirectives',
     'unref',
     'isRef'

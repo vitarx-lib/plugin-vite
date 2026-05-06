@@ -35,12 +35,14 @@ const UI_APIS = new Set([...UI_API_NAMES, 'jsxDEV', 'h'])
 
 /**
  * 判断标识符名称是否为 UI API
- * 支持原始名称和带后缀的名称（如 jsxDEV$1）
+ * 支持原始名称和带后缀的名称（如 jsxDEV$1、branch$2、expr$1）
  */
 function isUIApi(name: string): boolean {
   if (UI_APIS.has(name)) return true
-  // 支持带数字后缀的 createView
-  return /^jsxDEV\$\d+$/.test(name) || /^createView\$\d+$/.test(name)
+  for (const api of UI_APIS) {
+    if (name.startsWith(api + '$')) return true
+  }
+  return false
 }
 
 /**
@@ -134,7 +136,7 @@ function normalizeCode(code: string): string {
  * 判断两个函数组件的代码差异
  *
  * 分析策略：
- * 1. 解析函数代码，提取所有 createView/branch/dynamic 等 UI API 调用
+ * 1. 解析函数代码，提取所有 createView/branch/expr 等 UI API 调用
  * 2. 将这些调用识别为 UI 描述代码
  * 3. 其余代码识别为非 UI 代码（逻辑代码）
  * 4. 分别比较 UI 代码和非 UI 代码是否变化

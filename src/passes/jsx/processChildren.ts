@@ -5,6 +5,7 @@
  */
 import * as t from '@babel/types'
 import {
+  isBinaryExpression,
   isBooleanLiteral,
   isConditionalExpression,
   isIdentifier,
@@ -20,23 +21,19 @@ import {
 import { markImport, TransformContext } from '../../context.js'
 import {
   addPureComment,
-  createAccessCall,
+  createAccessorCall,
   createBinaryBranch,
-  createDynamicCall,
-  getAlias,
-  getDevLocInfo
+  createExprCall,
+  getAlias
 } from '../../utils/index.js'
 
 /**
  * 处理成员表达式
  */
-function handleMemberExpression(
-  expr: t.MemberExpression,
-  ctx: TransformContext
-): t.CallExpression {
-  markImport(ctx, 'access')
-  const accessAlias = getAlias(ctx.vitarxAliases, 'access')
-  return createAccessCall(expr.object, expr.property as t.Expression, accessAlias)
+function handleMemberExpression(expr: t.MemberExpression, ctx: TransformContext): t.CallExpression {
+  markImport(ctx, 'accessor')
+  const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
+  return createAccessorCall(expr.object, expr.property as t.Expression, accessorAlias)
 }
 
 /**
@@ -44,13 +41,20 @@ function handleMemberExpression(
  */
 function handleLogicalExpression(
   expr: t.LogicalExpression,
-  ctx: TransformContext,
-  loc?: t.SourceLocation | null
+  ctx: TransformContext
 ): t.CallExpression {
-  markImport(ctx, 'dynamic')
-  const dynamicAlias = getAlias(ctx.vitarxAliases, 'dynamic')
-  const locInfo = loc ? getDevLocInfo(ctx, { loc }) : null
-  return addPureComment(createDynamicCall(expr, dynamicAlias, locInfo), ctx)
+  markImport(ctx, 'expr')
+  const exprAlias = getAlias(ctx.vitarxAliases, 'expr')
+  return addPureComment(createExprCall(expr, exprAlias), ctx)
+}
+
+/**
+ * 处理二元表达式
+ */
+function handleBinaryExpression(expr: t.BinaryExpression, ctx: TransformContext): t.CallExpression {
+  markImport(ctx, 'expr')
+  const exprAlias = getAlias(ctx.vitarxAliases, 'expr')
+  return addPureComment(createExprCall(expr, exprAlias), ctx)
 }
 
 /**
@@ -86,12 +90,12 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
   // JSX 表达式容器
   if (isJSXExpressionContainer(node)) {
     if (node.expression.type === 'JSXEmptyExpression') return null
-    return processChildExpression(node.expression as t.Expression, ctx, node.loc)
+    return processChildExpression(node.expression as t.Expression, ctx)
   }
 
   // JSX 展开子元素
   if (node.type === 'JSXSpreadChild') {
-    return processChildExpression(node.expression, ctx, node.loc)
+    return processChildExpression(node.expression, ctx)
   }
 
   // JSX 元素或片段
@@ -124,6 +128,11 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
     return handleLogicalExpression(node, ctx)
   }
 
+  // 二元表达式
+  if (isBinaryExpression(node)) {
+    return handleBinaryExpression(node, ctx)
+  }
+
   // 调用表达式
   if (node.type === 'CallExpression') {
     return node as t.Expression
@@ -135,11 +144,7 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
 /**
  * 处理子表达式
  */
-function processChildExpression(
-  expr: t.Expression,
-  ctx: TransformContext,
-  loc?: t.SourceLocation | null
-): t.Expression {
+function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Expression {
   if (isIdentifier(expr)) {
     return expr
   }
@@ -153,7 +158,11 @@ function processChildExpression(
   }
 
   if (isLogicalExpression(expr)) {
-    return handleLogicalExpression(expr, ctx, loc)
+    return handleLogicalExpression(expr, ctx)
+  }
+
+  if (isBinaryExpression(expr)) {
+    return handleBinaryExpression(expr, ctx)
   }
 
   return expr
@@ -169,13 +178,8 @@ function processConditionalExpression(
 ): t.CallExpression {
   const { test, consequent, alternate } = node
 
-  // 处理分支
   const processedConsequent = processChildNode(consequent, ctx) || t.nullLiteral()
   const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
 
-  // 获取位置信息（仅开发环境）
-  const locInfo = getDevLocInfo(ctx, node)
-
-  // 使用公共的 createBinaryBranch
-  return createBinaryBranch(test, processedConsequent, processedAlternate, ctx, locInfo)
+  return createBinaryBranch(test, processedConsequent, processedAlternate, ctx)
 }

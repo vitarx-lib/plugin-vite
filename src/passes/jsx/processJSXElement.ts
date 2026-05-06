@@ -5,7 +5,7 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { isJSXElement, isJSXExpressionContainer, isJSXText } from '@babel/types'
+import { isJSXElement } from '@babel/types'
 import { addWarning, markImport, TransformContext } from '../../context.js'
 import { createError, createWarning } from '../../error.js'
 import {
@@ -13,13 +13,13 @@ import {
   createArrowFunction,
   createBranch,
   createCreateViewCall,
+  filterEffectiveChildren,
   getAlias,
   getDevLocInfo,
   getDirectiveValue,
   getJSXAttributeByName,
   getJSXElementName,
   hasEffectiveChildren,
-  filterEffectiveChildren,
   isNativeElement,
   isVElse,
   isVIf,
@@ -202,12 +202,8 @@ function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallEx
   const transformedNode = transformJSXElement(node, ctx, false)
   if (!transformedNode) return null
 
-  // 获取位置信息（仅开发环境）
-  const locInfo = getDevLocInfo(ctx, node)
-
-  // 生成 branch 调用
   const branchCall = createBranch(
-    { conditions: [condition], branches: [createArrowFunction(transformedNode)], locInfo },
+    { conditions: [condition], branches: [createArrowFunction(transformedNode)] },
     ctx
   )
 

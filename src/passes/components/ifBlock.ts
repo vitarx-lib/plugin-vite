@@ -13,7 +13,6 @@ import {
   createArrowFunction,
   createBranch,
   filterWhitespaceChildren,
-  getDevLocInfo,
   hasDirective,
   removeVIfChainDirectives,
   validateVIfChain
@@ -39,10 +38,7 @@ export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformConte
   nodes.forEach(node => removeVIfChainDirectives(node))
   const branches = nodes.map(node => createArrowFunction(node as t.Expression))
 
-  // 获取位置信息（仅开发环境）
-  const locInfo = getDevLocInfo(ctx, path.node)
-
-  const branchCall = createBranch({ conditions, branches, locInfo }, ctx)
+  const branchCall = createBranch({ conditions, branches }, ctx)
 
   if (path.node.loc) {
     branchCall.loc = path.node.loc

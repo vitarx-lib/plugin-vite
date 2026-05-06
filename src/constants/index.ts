@@ -2,22 +2,11 @@
  * Vitarx 运行时 API 名称
  * 这些 API 需要从 vitarx 包导入
  */
-export const VITARX_APIS = {
-  CREATE_VIEW: 'createView',
-  FRAGMENT: 'Fragment',
-  BRANCH: 'branch',
-  DYNAMIC: 'dynamic',
-  ACCESS: 'access',
-  WITH_DIRECTIVES: 'withDirectives',
-  UNREF: 'unref',
-  IS_REF: 'isRef'
-} as const
-
 /**
  * UI 相关的 API 名称列表
  * 这些 API 用于创建视图，在 HMR 时需要识别
  */
-export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'access', 'withDirectives'] as const
+export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'expr', 'accessor', 'withDirectives'] as const
 
 /**
  * Ref 相关 API 名称

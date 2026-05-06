@@ -18,8 +18,8 @@ const API_IMPORT_CONFIG: Array<{
   { name: 'createView', importKey: 'createView' },
   { name: 'Fragment', importKey: 'Fragment' },
   { name: 'branch', importKey: 'branch' },
-  { name: 'dynamic', importKey: 'dynamic' },
-  { name: 'access', importKey: 'access' },
+  { name: 'expr', importKey: 'expr' },
+  { name: 'accessor', importKey: 'accessor' },
   { name: 'withDirectives', importKey: 'withDirectives' },
   { name: 'unref', importKey: 'unref' },
   { name: 'isRef', importKey: 'isRef' }

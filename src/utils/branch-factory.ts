@@ -25,8 +25,6 @@ export interface BranchConfig {
   branches: t.ArrowFunctionExpression[]
   /** 是否使用 unref 包装标识符条件 */
   useRef?: boolean
-  /** 位置信息对象 */
-  locInfo?: t.ObjectExpression | null
 }
 
 /**
@@ -36,10 +34,9 @@ export interface BranchConfig {
  * @returns branch 调用表达式
  */
 export function createBranch(config: BranchConfig, ctx: TransformContext): t.CallExpression {
-  const { conditions, branches, useRef = true, locInfo } = config
+  const { conditions, branches, useRef = true } = config
 
   markImport(ctx, 'branch')
-  // 只有在需要 unref 且条件中有标识符时才标记导入
   if (useRef && conditions.some(c => isIdentifier(c))) {
     markImport(ctx, 'unref')
   }
@@ -47,7 +44,7 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const conditionExpr = buildNestedCondition(conditions, ctx, useRef)
   const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
 
-  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias, locInfo), ctx)
+  return addPureComment(createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias), ctx)
 }
 
 /**
@@ -127,20 +124,17 @@ export function buildNestedCondition(
  * @param consequent - 真值分支
  * @param alternate - 假值分支
  * @param ctx - 转换上下文
- * @param locInfo - 位置信息对象
  * @returns branch 调用表达式
  */
 export function createBinaryBranch(
   condition: t.Expression,
   consequent: t.Expression,
   alternate: t.Expression,
-  ctx: TransformContext,
-  locInfo?: t.ObjectExpression | null
+  ctx: TransformContext
 ): t.CallExpression {
   const conditions = [condition, t.booleanLiteral(true)]
   const branches = [createArrowFunction(consequent), createArrowFunction(alternate)]
 
-  // 只有条件是 Identifier 时才需要 unref
   const useRef = isIdentifier(condition)
-  return createBranch({ conditions, branches, useRef, locInfo }, ctx)
+  return createBranch({ conditions, branches, useRef }, ctx)
 }

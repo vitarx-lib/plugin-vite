@@ -13,13 +13,13 @@ describe('Children 处理', () => {
     `)
   })
 
-  it('MemberExpression 子元素使用 access', async () => {
+  it('MemberExpression 子元素使用 accessor', async () => {
     const code = `const App = () => <div>{props.value}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, access } from "vitarx";
+      "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: access(props, "value")
+        children: accessor(props, "value")
       });"
     `)
   })
@@ -46,13 +46,24 @@ describe('Children 处理', () => {
     `)
   })
 
-  it('LogicalExpression 子元素生成 dynamic', async () => {
+  it('LogicalExpression 子元素生成 expr', async () => {
     const code = `const App = () => <div>{a && b}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, dynamic } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */dynamic(() => a && b)
+        children: /* @__PURE__ */expr(() => a && b)
+      });"
+    `)
+  })
+
+  it('BinaryExpression 子元素生成 expr', async () => {
+    const code = `const App = () => <div>{count.value + 1}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => count.value + 1)
       });"
     `)
   })
@@ -126,9 +137,9 @@ describe('多子元素处理', () => {
     const code = `const App = () => <div>{props.a}{b}{props.c}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, access } from "vitarx";
+      "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: [access(props, "a"), b, access(props, "c")]
+        children: [accessor(props, "a"), b, accessor(props, "c")]
       });"
     `)
   })
@@ -139,9 +150,9 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{props.data.nested.value}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, access } from "vitarx";
+      "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: access(props.data.nested, "value")
+        children: accessor(props.data.nested, "value")
       });"
     `)
   })
@@ -178,9 +189,9 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{a || b}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, dynamic } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */dynamic(() => a || b)
+        children: /* @__PURE__ */expr(() => a || b)
       });"
     `)
   })
@@ -189,11 +200,11 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{a && b ? <span>x</span> : c || d}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, dynamic } from "vitarx";
+      "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => (a && b) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "x"
-        }), () => /* @__PURE__ */dynamic(() => c || d)])
+        }), () => /* @__PURE__ */expr(() => c || d)])
       });"
     `)
   })
@@ -236,6 +247,17 @@ describe('边界情况', () => {
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: true
+      });"
+    `)
+  })
+
+  it('Null字面量子元素', async () => {
+    const code = `const App = () => <div>{null}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: null
       });"
     `)
   })
