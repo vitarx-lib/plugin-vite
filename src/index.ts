@@ -68,8 +68,7 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
     enforce: 'pre',
     config(config, env) {
       isDEV = env.command === 'serve' && !env.isPreview
-      const configSSR = !!config.build?.ssr
-      isSSR = env.isSsrBuild === true || configSSR
+      isSSR = env.isSsrBuild === true
       return {
         define: {
           __VITARX_DEV__: JSON.stringify(isDEV),
@@ -86,7 +85,11 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
       }
     },
     configResolved(config) {
-      viteConfig = config
+      // 根据最终的配置结果，确定是否是 SSR 模式
+      if (!isSSR) {
+        isSSR = !!config.build?.ssr
+        config.define!['__VITARX_SSR__'] = JSON.stringify(isSSR)
+      }
       compileOptions = {
         dev: isDEV,
         ssr: isSSR,
