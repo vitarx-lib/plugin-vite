@@ -1,15 +1,23 @@
-# [1.0.0-beta.0](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.8...v1.0.0-beta.0) (2026-05-07)
+# [1.0.0-beta.1](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.0...v1.0.0-beta.1) (2026-05-08)
 
 
 ### Bug Fixes
 
 * **config:** 修正 SSR 模式判定逻辑 ([0aa08f5](https://gitee.com/vitarx/plugin-vite/commits/0aa08f5410793bb1cf54e15c50096ab5d2a3e582))
+* **directives:** 修复 v-if 链处理BUG ([8fde9a2](https://gitee.com/vitarx/plugin-vite/commits/8fde9a27b9995bb205d9784a9b17a6c39f4f1f4f))
+* **jsx-helpers:** 修正 v-if 指令的命名空间格式识别问题 ([b5678cc](https://gitee.com/vitarx/plugin-vite/commits/b5678ccb4c2d47972eeef05445b28518a3dae050))
+
+
+### Features
+
+* **vite-plugin:** 添加 pre 阶段执行配置 ([169e57c](https://gitee.com/vitarx/plugin-vite/commits/169e57c9944434720aa8ab929088e73ae6380355))
+
+## [0.0.1-beta.8](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.7...v0.0.1-beta.8) (2026-04-19)
 
 
 ### Features
 
 * **package:** 添加transform子模块的类型和入口声明 ([69b354b](https://gitee.com/vitarx/plugin-vite/commits/69b354b86b973c6981196ebc3fc16364db3c0294))
-* **vite-plugin:** 添加 pre 阶段执行配置 ([169e57c](https://gitee.com/vitarx/plugin-vite/commits/169e57c9944434720aa8ab929088e73ae6380355))
 
 ## [0.0.1-beta.7](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.6...v0.0.1-beta.7) (2026-04-02)
 
