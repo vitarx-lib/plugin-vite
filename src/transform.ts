@@ -110,6 +110,8 @@ function transformAST(ast: t.File, ctx: TransformContext): void {
         if (name && isPureCompileComponent(name)) {
           ctx.processedNodes.add(path.node)
           processPureCompileComponent(path, ctx)
+        } else {
+          processVIfChain(path, ctx, transformJSXElement)
         }
       },
       exit(path) {

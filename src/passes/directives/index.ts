@@ -3,5 +3,5 @@
  * @module passes/directives
  */
 
-export { processVIfChain } from './vIf.js'
+export { processVIfChain, transformChildrenVIfChains } from './vIf.js'
 export { processDirectives } from './processDirectives.js'

@@ -26,7 +26,7 @@ import {
   isVIfChain,
   removeVIfChainDirectives
 } from '../../utils/index.js'
-import { processDirectives } from '../directives/index.js'
+import { processDirectives, transformChildrenVIfChains } from '../directives/index.js'
 import { processProps } from '../props/index.js'
 import { processChildren } from './processChildren.js'
 
@@ -174,8 +174,11 @@ function processElementChildren(
     }
   }
 
+  // 处理子元素中的 v-if 链（确保嵌套链在 transformJSXElement 递归调用时被正确处理）
+  const chainProcessed = transformChildrenVIfChains(children, ctx, transformJSXElement)
+
   // 处理子元素
-  const processedChildren = processChildren(children, ctx)
+  const processedChildren = processChildren(chainProcessed, ctx)
   const childrenValue =
     processedChildren.length === 1 ? processedChildren[0] : t.arrayExpression(processedChildren)
 
