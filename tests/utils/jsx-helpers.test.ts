@@ -144,12 +144,20 @@ describe('jsx-helpers', () => {
       expect(hasDirective(element, 'v-if')).toBe(true)
     })
 
-    it('检测 v-if 指令（JSXNamespacedName 形式）', () => {
+    it('v:if 命名空间格式不被识别为 v-if 指令', () => {
       const attr = jsxAttribute(
         jsxNamespacedName(jsxIdentifier('v'), jsxIdentifier('if'))
       )
       const element = createJSXElement('div', [attr])
-      expect(hasDirective(element, 'v-if')).toBe(true)
+      expect(hasDirective(element, 'v-if')).toBe(false)
+    })
+
+    it('v:show 命名空间格式被识别为 v-show 指令', () => {
+      const attr = jsxAttribute(
+        jsxNamespacedName(jsxIdentifier('v'), jsxIdentifier('show'))
+      )
+      const element = createJSXElement('div', [attr])
+      expect(hasDirective(element, 'v-show')).toBe(true)
     })
 
     it('指令不存在返回 false', () => {

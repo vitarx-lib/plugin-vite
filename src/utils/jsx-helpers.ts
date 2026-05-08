@@ -5,8 +5,8 @@
 import * as t from '@babel/types'
 import { type Expression, isJSXElement, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
 import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
-import { isWhitespaceJSXText } from './ast-guards.js'
 import { createError } from '../error.js'
+import { isWhitespaceJSXText } from './ast-guards.js'
 
 /**
  * 获取 JSX 元素的名称
@@ -53,14 +53,19 @@ export function getJSXAttributeByName(node: JSXElement, name: string): JSXAttrib
   return undefined
 }
 
+const V_IF_CHAIN_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else'])
+
 /**
  * 检查元素是否具有指定指令
+ * v-if/v-else-if/v-else 仅支持 JSXIdentifier 格式（v-if），不支持命名空间格式（v:if）
+ * 其他指令（如 v-show）支持 v-xxx:arg 命名空间格式
  */
 export function hasDirective(node: JSXElement, directiveName: string): boolean {
   for (const attr of node.openingElement.attributes) {
     if (attr.type === 'JSXAttribute') {
       const attrName = attr.name
       if (attrName.type === 'JSXNamespacedName') {
+        if (V_IF_CHAIN_DIRECTIVES.has(directiveName)) continue
         if (attrName.namespace.name === 'v' && attrName.name.name === directiveName.slice(2)) {
           return true
         }
@@ -74,6 +79,7 @@ export function hasDirective(node: JSXElement, directiveName: string): boolean {
 
 /**
  * 获取指令的值
+ * v-if/v-else-if/v-else 仅支持 JSXIdentifier 格式（v-if），不支持命名空间格式（v:if）
  */
 export function getDirectiveValue(node: JSXElement, directiveName: string): Expression | null {
   for (const attr of node.openingElement.attributes) {
@@ -81,6 +87,7 @@ export function getDirectiveValue(node: JSXElement, directiveName: string): Expr
       const attrName = attr.name
       let matches = false
       if (attrName.type === 'JSXNamespacedName') {
+        if (V_IF_CHAIN_DIRECTIVES.has(directiveName)) continue
         matches = attrName.namespace.name === 'v' && attrName.name.name === directiveName.slice(2)
       } else if (attrName.type === 'JSXIdentifier') {
         matches = attrName.name === directiveName
@@ -144,18 +151,14 @@ export function removeVDirectives(node: JSXElement): void {
 
 /**
  * 移除元素上的 v-if 链指令（v-if、v-else-if、v-else）
+ * 仅处理 JSXIdentifier 格式，不支持命名空间格式（v:if）
  */
 export function removeVIfChainDirectives(node: JSXElement): void {
-  const vIfChainDirectives = ['v-if', 'v-else-if', 'v-else']
   node.openingElement.attributes = node.openingElement.attributes.filter(attr => {
     if (attr.type === 'JSXAttribute') {
       const attrName = attr.name
-      if (attrName.type === 'JSXNamespacedName') {
-        if (attrName.namespace.name === 'v') {
-          return !vIfChainDirectives.includes(`v-${attrName.name.name}`)
-        }
-      } else if (attrName.type === 'JSXIdentifier') {
-        return !vIfChainDirectives.includes(attrName.name)
+      if (attrName.type === 'JSXIdentifier') {
+        return !V_IF_CHAIN_DIRECTIVES.has(attrName.name)
       }
     }
     return true

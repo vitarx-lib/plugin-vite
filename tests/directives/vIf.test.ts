@@ -409,33 +409,26 @@ describe('v-if 链与其他指令组合', () => {
 })
 
 describe('v-if 命名空间语法', () => {
-  it('v:if 单独使用', async () => {
+  it('v:if 不被识别为 v-if 指令，作为普通属性处理', async () => {
     const code = `const App = () => <div v:if={show}>visible</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
+      "import { createView, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        get "v:if"() {
+          return unref(show);
+        },
         children: "visible"
-      })]);"
+      });"
     `)
   })
 
-  it('v:if + v:else 命名空间语法', async () => {
+  it('v:if + v:else 组合不形成链，v-else 报错', async () => {
     const code = `const App = () => <>
       <div v:if={show}>visible</div>
-      <span v:else>hidden</span>
+      <span v-else>hidden</span>
     </>`
-    const result = await compile(code)
-    expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */createView(Fragment, {
-        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
-          children: "visible"
-        }), () => /* @__PURE__ */createView("span", {
-          children: "hidden"
-        })])
-      });"
-    `)
+    await expect(compile(code)).rejects.toThrow('[E003]')
   })
 })
 
