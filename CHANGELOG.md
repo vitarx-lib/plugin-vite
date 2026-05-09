@@ -1,11 +1,22 @@
-# [1.0.0-beta.1](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.0...v1.0.0-beta.1) (2026-05-08)
+# [1.0.0-beta.2](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* **directives:** 修复 v-if 链处理BUG ([8fde9a2](https://gitee.com/vitarx/plugin-vite/commits/8fde9a27b9995bb205d9784a9b17a6c39f4f1f4f))
+* **jsx-helpers:** 修正 v-if 指令的命名空间格式识别问题 ([b5678cc](https://gitee.com/vitarx/plugin-vite/commits/b5678ccb4c2d47972eeef05445b28518a3dae050))
+
+
+### Features
+
+* **jsx:** 新增成员表达式组件支持 ([00ac940](https://gitee.com/vitarx/plugin-vite/commits/00ac9408b566cc7f0d8a373cecc478df4249cec4))
+
+# [1.0.0-beta.0](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.8...v1.0.0-beta.0) (2026-05-07)
 
 
 ### Bug Fixes
 
 * **config:** 修正 SSR 模式判定逻辑 ([0aa08f5](https://gitee.com/vitarx/plugin-vite/commits/0aa08f5410793bb1cf54e15c50096ab5d2a3e582))
-* **directives:** 修复 v-if 链处理BUG ([8fde9a2](https://gitee.com/vitarx/plugin-vite/commits/8fde9a27b9995bb205d9784a9b17a6c39f4f1f4f))
-* **jsx-helpers:** 修正 v-if 指令的命名空间格式识别问题 ([b5678cc](https://gitee.com/vitarx/plugin-vite/commits/b5678ccb4c2d47972eeef05445b28518a3dae050))
 
 
 ### Features
