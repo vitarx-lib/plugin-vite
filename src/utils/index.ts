@@ -4,6 +4,7 @@ export { isWhitespaceJSXText } from './ast-guards.js'
 // JSX 辅助函数
 export {
   getJSXElementName,
+  resolveJSXElementType,
   isPureCompileComponent,
   isComponent,
   isNativeElement,

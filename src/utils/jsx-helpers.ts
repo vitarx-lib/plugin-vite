@@ -17,6 +17,37 @@ export function getJSXElementName(node: JSXElement): string | null {
 }
 
 /**
+ * 将 JSX 元素名称节点转换为 createView 的类型表达式
+ * JSXIdentifier → Identifier（组件）或 StringLiteral（原生元素）
+ * JSXMemberExpression → MemberExpression（如 Obj.Key → Obj.Key）
+ */
+export function resolveJSXElementType(node: JSXElement): t.Expression | null {
+  const nameNode = node.openingElement.name
+
+  if (nameNode.type === 'JSXIdentifier') {
+    const name = nameNode.name
+    return isNativeElement(name) ? t.stringLiteral(name) : t.identifier(name)
+  }
+
+  if (nameNode.type === 'JSXMemberExpression') {
+    return jsxMemberExprToMemberExpr(nameNode)
+  }
+
+  return null
+}
+
+/**
+ * 递归转换 JSXMemberExpression 为 MemberExpression
+ * Obj.Key → Obj.Key, A.B.C → A.B.C
+ */
+function jsxMemberExprToMemberExpr(node: t.JSXMemberExpression): t.MemberExpression {
+  const object = node.object.type === 'JSXMemberExpression'
+    ? jsxMemberExprToMemberExpr(node.object)
+    : t.identifier((node.object as t.JSXIdentifier).name)
+  return t.memberExpression(object, t.identifier(node.property.name))
+}
+
+/**
  * 判断名称是否为纯编译组件
  */
 export function isPureCompileComponent(name: string): boolean {

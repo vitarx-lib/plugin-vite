@@ -20,11 +20,11 @@ import {
   getJSXAttributeByName,
   getJSXElementName,
   hasEffectiveChildren,
-  isNativeElement,
   isVElse,
   isVIf,
   isVIfChain,
-  removeVIfChainDirectives
+  removeVIfChainDirectives,
+  resolveJSXElementType
 } from '../../utils/index.js'
 import { processDirectives, transformChildrenVIfChains } from '../directives/index.js'
 import { processProps } from '../props/index.js'
@@ -92,9 +92,6 @@ export function transformJSXElement(
   ctx: TransformContext,
   handleVIf: boolean = false
 ): t.Expression | null {
-  const name = getJSXElementName(node)
-  if (!name) return null
-
   // 处理 v-if 链
   if (handleVIf && isVIfChain(node)) {
     if (isVIf(node)) {
@@ -104,8 +101,9 @@ export function transformJSXElement(
     }
   }
 
-  // 确定元素类型
-  const type = isNativeElement(name) ? t.stringLiteral(name) : t.identifier(name)
+  // 解析 JSX 元素类型
+  const type = resolveJSXElementType(node)
+  if (!type) return null
 
   // 检测是否有有效子元素
   const hasChildren = hasEffectiveChildren(node)
