@@ -3,12 +3,12 @@ import { classNameTransformOptions, compile } from '../test-utils.js'
 
 describe('Props getter 行为', () => {
   it('静态字符串属性', async () => {
-    const code = `const App = () => <div className="test"></div>`
+    const code = `const App = () => <div class="test"></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        "className": "test"
+        "class": "test"
       });"
     `)
   })
@@ -35,13 +35,24 @@ describe('Props getter 行为', () => {
     `)
   })
 
+  it('静态null属性', async () => {
+    const code = `const App = () => <div test={null}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "test": null
+      });"
+    `)
+  })
+
   it('Identifier 属性生成 getter', async () => {
-    const code = `const App = () => <div className={className}></div>`
+    const code = `const App = () => <div class={className}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get "className"() {
+        get "class"() {
           return unref(className);
         }
       });"
@@ -49,32 +60,36 @@ describe('Props getter 行为', () => {
   })
 
   it('MemberExpression 属性生成 getter', async () => {
-    const code = `const App = () => <div className={props.className}></div>`
+    const code = `const App = () => <div class={props.className}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, accessor } from "vitarx";
+      "import { createView, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        "className": accessor(props, "className")
+        get "class"() {
+          return unref(props.className);
+        }
       });"
     `)
   })
   it('中划线属性名支持', async () => {
-    const code = `const App = () => <div data-id={props.className}></div>`
+    const code = `const App = () => <div data-id={props.class}></div>`
     expect(await compile(code)).toMatchInlineSnapshot(`
-      "import { createView, accessor } from "vitarx";
+      "import { createView, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        "data-id": accessor(props, "className")
+        get "data-id"() {
+          return unref(props.class);
+        }
       });"
     `)
   })
 
   it('复杂表达式属性生成 getter', async () => {
-    const code = `const App = () => <div className={a + b}></div>`
+    const code = `const App = () => <div class={a + b}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get "className"() {
+        get "class"() {
           return a + b;
         }
       });"

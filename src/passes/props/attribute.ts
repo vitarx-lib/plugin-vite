@@ -14,7 +14,7 @@ import {
 } from '@babel/types'
 import { markImport, TransformContext } from '../../context.js'
 import { createError } from '../../error.js'
-import { createAccessorCall, getAlias } from '../../utils/index.js'
+import { getAlias } from '../../utils/index.js'
 import type { AttributeResult } from './types.js'
 
 /**
@@ -124,64 +124,85 @@ export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression 
  */
 export function createProperty(
   key: string, // 属性名称字符串
-  value: t.Expression, // 属性值的表达式，可以是各种类型的表达式
-  ctx: TransformContext // 转换上下文对象，包含转换所需的各种信息和工具函数
+  value: t.Expression, // 属性值的表达式节点
+  ctx: TransformContext // 转换上下文对象，包含转换所需的环境信息
 ): t.ObjectProperty | t.ObjectMethod {
-  // 返回类型，可以是对象属性或对象方法
-  // 创建属性名的字符串字面量节点
+  // 返回对象属性或方法节点
+  // 创建属性名的字面量节点
   const keyNode = t.stringLiteral(key)
 
-  // 如果值是字符串、数字或布尔字面量，直接创建对象属性
-  if (isStringLiteral(value) || isNumericLiteral(value) || isBooleanLiteral(value)) {
+  // 处理静态值：字符串、数字、布尔值和null字面量
+  if (
+    isStringLiteral(value) || // 检查是否为字符串字面量
+    isNumericLiteral(value) || // 检查是否为数字字面量
+    isBooleanLiteral(value) || // 检查是否为布尔值字面量
+    t.isNullLiteral(value) // 检查是否为null字面量
+  ) {
+    // 对于静态值，直接创建对象属性节点
     return t.objectProperty(keyNode, value)
   }
 
-  // 如果值是标识符
+  // 处理标识符类型的值
   if (isIdentifier(value)) {
-    // 检查标识符是否是 ref 变量
+    // 如果值是标识符且在引用变量集合中
     if (ctx.refVariables.has(value.name)) {
-      // 如果是 ref 变量，创建一个 getter 方法来访问其 value 属性
-      return t.objectMethod(
-        'get',
+      // 创建getter方法，返回引用的value属性
+      return createGetter(
         keyNode,
-        [],
-        t.blockStatement([t.returnStatement(t.memberExpression(value, t.identifier('value')))])
+        t.returnStatement(t.memberExpression(value, t.identifier('value')))
       )
     }
-
-    // 特殊处理 children 属性，不使用 unref
+    // 特殊处理children属性
     if (key === 'children') {
+      // children属性不使用unref，保持原样
       return t.objectProperty(keyNode, value)
     }
-
-    // 标记需要导入 unref 函数
-    markImport(ctx, 'unref')
-    // 获取 unref 函数的别名
-    const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
-    // 创建 getter 方法，使用 unref 解包属性值
-    return t.objectMethod(
-      'get',
-      keyNode,
-      [],
-      t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))])
-    )
+    // 其他标识符属性创建unref getter
+    return createUnrefGetter(keyNode, value, ctx)
   }
 
-  // 如果值是成员表达式，创建 accessor 调用
+  // 处理成员表达式类型的值
   if (isMemberExpression(value)) {
-    // 标记需要导入 accessor 函数
-    markImport(ctx, 'accessor')
-    // 获取 accessor 函数的别名
-    const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
-    // 创建属性节点，使用 accessor 处理成员表达式
-    return t.objectProperty(
-      keyNode,
-      createAccessorCall(value.object, value.property as t.Expression, accessorAlias)
-    )
+    // 创建unref getter处理成员表达式
+    return createUnrefGetter(keyNode, value, ctx)
   }
 
-  // 默认情况下创建 getter 方法直接返回值
-  return t.objectMethod('get', keyNode, [], t.blockStatement([t.returnStatement(value)]))
+  // 默认情况：创建getter方法返回原始值
+  return createGetter(keyNode, t.returnStatement(value))
+}
+
+/**
+ * 创建一个getter方法
+ * @param keyNode - 属性键的字符串字面量节点
+ * @param statement - getter方法体中的语句
+ * @returns 返回一个ObjectMethod类型的AST节点，表示一个getter方法
+ */
+function createGetter(keyNode: t.StringLiteral, statement: t.Statement): t.ObjectMethod {
+  // 使用objectMethod方法创建一个getter方法
+  // 参数分别为: 方法类型('get')、属性键、参数数组(空数组)、方法体(包含传入的语句)
+  return t.objectMethod('get', keyNode, [], t.blockStatement([statement]))
+}
+
+/**
+ * 创建一个getter方法，该方法会对返回值进行unref处理
+ * @param keyNode - 对象的键节点，是一个字符串字面量
+ * @param value - 需要进行unref处理的值表达式
+ * @param ctx - 转换上下文对象，包含转换所需的各种信息和工具函数
+ * @returns 返回一个ObjectMethod类型的AST节点，表示一个getter方法
+ */
+function createUnrefGetter(
+  keyNode: t.StringLiteral, // 对象的键，使用字符串字面量表示
+  value: t.Expression, // 需要进行unref处理的值表达式
+  ctx: TransformContext // 转换上下文，包含转换所需的各种信息和工具函数
+): t.ObjectMethod {
+  // 返回一个对象方法类型的AST节点
+  markImport(ctx, 'unref') // 标记需要导入unref函数
+  const unrefAlias = getAlias(ctx.vitarxAliases, 'unref') // 获取unref函数的别名
+  return createGetter(
+    // 创建并返回一个getter方法
+    keyNode,
+    t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value])) // 返回对value进行unref处理后的结果
+  )
 }
 
 /**
