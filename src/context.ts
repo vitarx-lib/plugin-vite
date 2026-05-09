@@ -3,7 +3,7 @@
  * 定义编译转换过程中的上下文数据结构
  * @module context
  */
-import type { CallExpression, File } from '@babel/types'
+import type { CallExpression, File, Node } from '@babel/types'
 import type { CompilerWarning } from './error.js'
 import type { CompileOptions } from './types.js'
 
@@ -143,7 +143,7 @@ export function createContext(
     },
     refVariables: new Set(),
     builderAlias: null,
-    processedNodes: new WeakSet(),
+    processedNodes: new WeakSet<Node>(),
     pureCommentedNodes: new WeakSet(),
     warnings: []
   }

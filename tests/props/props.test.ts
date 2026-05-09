@@ -52,22 +52,20 @@ describe('Props getter 行为', () => {
     const code = `const App = () => <div className={props.className}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        get "className"() {
-          return props.className;
-        }
+        "className": accessor(props, "className")
       });"
     `)
   })
   it('中划线属性名支持', async () => {
     const code = `const App = () => <div data-id={props.className}></div>`
-    expect(await compile(code)).toMatchInlineSnapshot(`"import { createView } from "vitarx";
-const App = () => /* @__PURE__ */createView("div", {
-  get \"data-id\"() {
-    return props.className;
-  }
-});"`)
+    expect(await compile(code)).toMatchInlineSnapshot(`
+      "import { createView, accessor } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "data-id": accessor(props, "className")
+      });"
+    `)
   })
 
   it('复杂表达式属性生成 getter', async () => {

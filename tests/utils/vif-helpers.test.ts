@@ -1,26 +1,21 @@
+import {
+  identifier,
+  jsxAttribute,
+  jsxClosingElement,
+  jsxElement,
+  jsxExpressionContainer,
+  jsxIdentifier,
+  jsxOpeningElement,
+  jsxText
+} from '@babel/types'
 import { describe, expect, it } from 'vitest'
 import {
-  jsxElement,
-  jsxOpeningElement,
-  jsxClosingElement,
-  jsxIdentifier,
-  jsxAttribute,
-  jsxText,
-  jsxExpressionContainer,
-  identifier,
-  booleanLiteral
-} from '@babel/types'
-import {
-  validateVIfChain,
+  collectFragmentVIfChains,
   collectVIfChainInfo,
-  collectFragmentVIfChains
+  validateVIfChain
 } from '../../src/utils/vif-helpers.js'
 
-function createJSXElement(
-  tagName: string,
-  attributes: any[] = [],
-  children: any[] = []
-): any {
+function createJSXElement(tagName: string, attributes: any[] = [], children: any[] = []): any {
   return jsxElement(
     jsxOpeningElement(jsxIdentifier(tagName), attributes),
     jsxClosingElement(jsxIdentifier(tagName)),
@@ -116,10 +111,7 @@ describe('vif-helpers', () => {
     })
 
     it('返回正确的节点和结束索引', () => {
-      const elements = [
-        createVIfElement(identifier('a')),
-        createVElseIfElement(identifier('b'))
-      ]
+      const elements = [createVIfElement(identifier('a')), createVElseIfElement(identifier('b'))]
       const info = collectVIfChainInfo(elements)
       expect(info.nodes.length).toBe(2)
       expect(info.endIndex).toBe(1)
@@ -157,21 +149,14 @@ describe('vif-helpers', () => {
     })
 
     it('跳过空白文本节点', () => {
-      const children = [
-        createVIfElement(identifier('a')),
-        jsxText('\n  '),
-        createVElseElement()
-      ]
+      const children = [createVIfElement(identifier('a')), jsxText('\n  '), createVElseElement()]
       const chains = collectFragmentVIfChains(children)
       expect(chains.length).toBe(1)
       expect(chains[0].conditions.length).toBe(2)
     })
 
     it('跳过非 JSX 元素（不中断 v-if 链）', () => {
-      const children = [
-        createVIfElement(identifier('a')),
-        createVElseElement()
-      ]
+      const children = [createVIfElement(identifier('a')), createVElseElement()]
       const chains = collectFragmentVIfChains(children)
       expect(chains.length).toBe(1)
     })

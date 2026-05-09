@@ -136,6 +136,32 @@ export function collectBuilderWrappedNames(
           wrappedNames.add(arg.name)
         }
       }
+    } else if (node.type === 'ExportDefaultDeclaration' && node.declaration.type === 'CallExpression') {
+      const callExpr = node.declaration
+      if (isBuilderCall(callExpr, builderAlias)) {
+        const arg = callExpr.arguments[0]
+        if (arg?.type === 'Identifier') {
+          wrappedNames.add(arg.name)
+        }
+      }
+    } else if (node.type === 'VariableDeclaration') {
+      for (const decl of node.declarations) {
+        if (decl.init?.type === 'CallExpression' && isBuilderCall(decl.init, builderAlias)) {
+          const arg = decl.init.arguments[0]
+          if (arg?.type === 'Identifier') {
+            wrappedNames.add(arg.name)
+          }
+        }
+      }
+    } else if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
+      for (const decl of node.declaration.declarations) {
+        if (decl.init?.type === 'CallExpression' && isBuilderCall(decl.init, builderAlias)) {
+          const arg = decl.init.arguments[0]
+          if (arg?.type === 'Identifier') {
+            wrappedNames.add(arg.name)
+          }
+        }
+      }
     }
   }
 

@@ -57,8 +57,19 @@ export function collectRefVariables(program: t.Program, refApiAliases: RefApiAli
   const { refApiLocalNames, toRefsLocalNames } = buildApiNameSets(refApiAliases)
 
   for (const node of program.body) {
-    if (node.type !== 'VariableDeclaration') continue
+    collectRefVariablesFromNode(node, refVariables, refApiLocalNames, toRefsLocalNames)
+  }
 
+  return refVariables
+}
+
+function collectRefVariablesFromNode(
+  node: t.Node,
+  refVariables: Set<string>,
+  refApiLocalNames: Set<string>,
+  toRefsLocalNames: Set<string>
+): void {
+  if (node.type === 'VariableDeclaration') {
     for (const decl of node.declarations) {
       if (!decl.init) continue
       if (decl.id.type === 'VoidPattern') continue
@@ -76,9 +87,20 @@ export function collectRefVariables(program: t.Program, refApiAliases: RefApiAli
         collectPatternBindings(decl.id, refVariables)
       }
     }
+  } else if (node.type === 'FunctionDeclaration' && node.body) {
+    for (const stmt of node.body.body) {
+      collectRefVariablesFromNode(stmt, refVariables, refApiLocalNames, toRefsLocalNames)
+    }
+  } else if (node.type === 'ExportNamedDeclaration' && node.declaration) {
+    collectRefVariablesFromNode(node.declaration, refVariables, refApiLocalNames, toRefsLocalNames)
+  } else if (node.type === 'ExportDefaultDeclaration') {
+    const decl = node.declaration
+    if (decl.type === 'FunctionDeclaration' && decl.body) {
+      for (const stmt of decl.body.body) {
+        collectRefVariablesFromNode(stmt, refVariables, refApiLocalNames, toRefsLocalNames)
+      }
+    }
   }
-
-  return refVariables
 }
 
 /**

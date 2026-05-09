@@ -147,12 +147,23 @@ describe('branch-factory', () => {
 
     it('标识符条件标记 unref 导入', () => {
       const ctx = createMockContext()
+      ctx.refVariables.add('show')
       const config = {
         conditions: [identifier('show')],
         branches: [arrowFunctionExpression([], identifier('a'))]
       }
       createBranch(config, ctx)
       expect(ctx.imports.unref).toBe(true)
+    })
+
+    it('非 ref 标识符条件不标记 unref 导入', () => {
+      const ctx = createMockContext()
+      const config = {
+        conditions: [identifier('show')],
+        branches: [arrowFunctionExpression([], identifier('a'))]
+      }
+      createBranch(config, ctx)
+      expect(ctx.imports.unref).toBe(false)
     })
 
     it('非标识符条件不标记 unref 导入', () => {
@@ -191,6 +202,7 @@ describe('branch-factory', () => {
   describe('createBinaryBranch', () => {
     it('创建二元条件 branch', () => {
       const ctx = createMockContext()
+      ctx.refVariables.add('show')
       const call = createBinaryBranch(identifier('show'), identifier('a'), identifier('b'), ctx)
       expect(call.type).toBe('CallExpression')
       expect(ctx.imports.branch).toBe(true)
@@ -199,7 +211,7 @@ describe('branch-factory', () => {
 
     it('非标识符条件不标记 unref', () => {
       const ctx = createMockContext()
-      const call = createBinaryBranch(stringLiteral('test'), identifier('a'), identifier('b'), ctx)
+      createBinaryBranch(stringLiteral('test'), identifier('a'), identifier('b'), ctx)
       expect(ctx.imports.unref).toBe(false)
     })
   })

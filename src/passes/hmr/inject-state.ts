@@ -121,18 +121,65 @@ export function createWrappedComponentHMRStatements(componentName: string): t.St
  */
 export function collectLocalVariableNames(functionBody: t.BlockStatement): string[] {
   const variableNames = new Set<string>()
+  collectFromBlock(functionBody, variableNames)
+  return Array.from(variableNames)
+}
 
-  for (const stmt of functionBody.body) {
-    if (stmt.type === 'VariableDeclaration') {
-      for (const decl of stmt.declarations) {
-        if (decl.id.type !== 'VoidPattern') {
-          collectPatternBindings(decl.id, variableNames)
-        }
+function collectFromBlock(block: t.BlockStatement, variableNames: Set<string>): void {
+  for (const stmt of block.body) {
+    collectFromStatement(stmt, variableNames)
+  }
+}
+
+function collectFromStatement(stmt: t.Statement, variableNames: Set<string>): void {
+  if (stmt.type === 'VariableDeclaration') {
+    for (const decl of stmt.declarations) {
+      if (decl.id.type !== 'VoidPattern') {
+        collectPatternBindings(decl.id, variableNames)
       }
     }
+  } else if (stmt.type === 'IfStatement') {
+    if (stmt.consequent.type === 'BlockStatement') {
+      collectFromBlock(stmt.consequent, variableNames)
+    } else {
+      collectFromStatement(stmt.consequent, variableNames)
+    }
+    if (stmt.alternate) {
+      if (stmt.alternate.type === 'BlockStatement') {
+        collectFromBlock(stmt.alternate, variableNames)
+      } else {
+        collectFromStatement(stmt.alternate, variableNames)
+      }
+    }
+  } else if (stmt.type === 'ForStatement' || stmt.type === 'WhileStatement' || stmt.type === 'DoWhileStatement') {
+    if (stmt.body.type === 'BlockStatement') {
+      collectFromBlock(stmt.body, variableNames)
+    } else {
+      collectFromStatement(stmt.body, variableNames)
+    }
+  } else if (stmt.type === 'ForInStatement' || stmt.type === 'ForOfStatement') {
+    if (stmt.body.type === 'BlockStatement') {
+      collectFromBlock(stmt.body, variableNames)
+    } else {
+      collectFromStatement(stmt.body, variableNames)
+    }
+  } else if (stmt.type === 'BlockStatement') {
+    collectFromBlock(stmt, variableNames)
+  } else if (stmt.type === 'SwitchStatement') {
+    for (const c of stmt.cases) {
+      for (const s of c.consequent) {
+        collectFromStatement(s, variableNames)
+      }
+    }
+  } else if (stmt.type === 'TryStatement') {
+    collectFromBlock(stmt.block, variableNames)
+    if (stmt.handler) {
+      collectFromBlock(stmt.handler.body, variableNames)
+    }
+    if (stmt.finalizer) {
+      collectFromBlock(stmt.finalizer, variableNames)
+    }
   }
-
-  return Array.from(variableNames)
 }
 
 /**

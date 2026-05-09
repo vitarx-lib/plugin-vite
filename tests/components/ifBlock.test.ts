@@ -11,7 +11,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
         children: "visible"
       }), () => /* @__PURE__ */createView("span", {
@@ -30,7 +30,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
         children: "A"
       }), () => /* @__PURE__ */createView("span", {
@@ -49,7 +49,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
         children: "visible"
       })]);"
@@ -67,7 +67,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : (unref(c) ? 2 : 3)), [() => /* @__PURE__ */createView("div", {
         children: "A"
       }), () => /* @__PURE__ */createView("span", {
@@ -89,7 +89,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView(MyComponent), () => /* @__PURE__ */createView(OtherComponent)]);"
     `)
   })
@@ -105,7 +105,7 @@ describe('IfBlock 组件', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "visible"

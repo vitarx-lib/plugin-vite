@@ -37,7 +37,7 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const { conditions, branches, useRef = true } = config
 
   markImport(ctx, 'branch')
-  if (useRef && conditions.some(c => isIdentifier(c))) {
+  if (useRef && conditions.some(c => isIdentifier(c) && ctx.refVariables.has(c.name))) {
     markImport(ctx, 'unref')
   }
 

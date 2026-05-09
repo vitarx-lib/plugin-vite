@@ -97,11 +97,12 @@ function createHotAcceptStatement(): t.Statement {
  */
 function generateComponentId(filename: string, componentName: string): string {
   const combined = `${filename}:${componentName}`
-  let hash = 0
+  let hash = 2166136261
   for (let i = 0; i < combined.length; i++) {
-    hash = ((hash << 5) - hash + combined.charCodeAt(i)) | 0
+    hash ^= combined.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
   }
-  return Math.abs(hash).toString(16)
+  return (hash >>> 0).toString(16)
 }
 
 /**

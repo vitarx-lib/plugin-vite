@@ -28,7 +28,12 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   // 比较新旧组件的差异，检查逻辑是否有变化
   const { logic } = diffComponentChange(view.component.toString(), newComponent.toString())
   // 更新视图中的组件引用
-  ;(view as any).component = newComponent
+  Object.defineProperty(view, 'component', {
+    value: newComponent,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  })
   // 如果逻辑有变化，则完全重新挂载组件
   if (logic) {
     const ctx = view.ctx
@@ -40,11 +45,17 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   // 销毁旧作用域
   instance.scope.dispose()
   // 重新创建新的作用域
-  ;(instance as any).scope = new EffectScope({
+  const scope = new EffectScope({
     name: view.name,
     errorHandler: (error, source) => {
       instance.reportError(error, `effect:${source}`)
     }
+  })
+  Object.defineProperty(instance, 'scope', {
+    value: scope,
+    writable: true,
+    enumerable: true,
+    configurable: true
   })
   // 销毁旧的子树
   instance.subView.dispose()
@@ -56,7 +67,12 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
     instance.reportError(e, 'component:run')
     subView = createCommentView(`Component<${view.name}>:failed`)
   }
-  ;(instance as any).subView = instance['normalizeView'](subView)
+  Object.defineProperty(instance, 'subView', {
+    value: instance['normalizeView'](subView),
+    writable: true,
+    enumerable: true,
+    configurable: true
+  })
   // 初始化新的子树
   instance.subView.init(instance.subViewContext)
   // 挂载新的子树

@@ -8,12 +8,13 @@ import {
   isBooleanLiteral,
   isIdentifier,
   isJSXExpressionContainer,
+  isMemberExpression,
   isNumericLiteral,
   isStringLiteral
 } from '@babel/types'
 import { markImport, TransformContext } from '../../context.js'
 import { createError } from '../../error.js'
-import { getAlias } from '../../utils/index.js'
+import { createAccessorCall, getAlias } from '../../utils/index.js'
 import type { AttributeResult } from './types.js'
 
 /**
@@ -122,18 +123,24 @@ export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression 
  * @returns 对象属性或方法节点
  */
 export function createProperty(
-  key: string,
-  value: t.Expression,
-  ctx: TransformContext
+  key: string, // 属性名称字符串
+  value: t.Expression, // 属性值的表达式，可以是各种类型的表达式
+  ctx: TransformContext // 转换上下文对象，包含转换所需的各种信息和工具函数
 ): t.ObjectProperty | t.ObjectMethod {
+  // 返回类型，可以是对象属性或对象方法
+  // 创建属性名的字符串字面量节点
   const keyNode = t.stringLiteral(key)
 
+  // 如果值是字符串、数字或布尔字面量，直接创建对象属性
   if (isStringLiteral(value) || isNumericLiteral(value) || isBooleanLiteral(value)) {
     return t.objectProperty(keyNode, value)
   }
 
+  // 如果值是标识符
   if (isIdentifier(value)) {
+    // 检查标识符是否是 ref 变量
     if (ctx.refVariables.has(value.name)) {
+      // 如果是 ref 变量，创建一个 getter 方法来访问其 value 属性
       return t.objectMethod(
         'get',
         keyNode,
@@ -142,12 +149,16 @@ export function createProperty(
       )
     }
 
+    // 特殊处理 children 属性，不使用 unref
     if (key === 'children') {
       return t.objectProperty(keyNode, value)
     }
 
+    // 标记需要导入 unref 函数
     markImport(ctx, 'unref')
+    // 获取 unref 函数的别名
     const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
+    // 创建 getter 方法，使用 unref 解包属性值
     return t.objectMethod(
       'get',
       keyNode,
@@ -156,6 +167,20 @@ export function createProperty(
     )
   }
 
+  // 如果值是成员表达式，创建 accessor 调用
+  if (isMemberExpression(value)) {
+    // 标记需要导入 accessor 函数
+    markImport(ctx, 'accessor')
+    // 获取 accessor 函数的别名
+    const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
+    // 创建属性节点，使用 accessor 处理成员表达式
+    return t.objectProperty(
+      keyNode,
+      createAccessorCall(value.object, value.property as t.Expression, accessorAlias)
+    )
+  }
+
+  // 默认情况下创建 getter 方法直接返回值
   return t.objectMethod('get', keyNode, [], t.blockStatement([t.returnStatement(value)]))
 }
 
@@ -209,6 +234,5 @@ export function processAttribute(
   }
 
   // 未知属性类型，作为普通属性处理
-  const value = getAttributeValue(attr.value)
-  return { type: 'property', property: t.objectProperty(t.identifier('unknown'), value) }
+  throw createError('E002', attr, 'Unsupported attribute name type')
 }

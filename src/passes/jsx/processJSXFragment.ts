@@ -5,7 +5,7 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { TransformContext } from '../../context.js'
+import { markImport, type TransformContext } from '../../context.js'
 import {
   addPureComment,
   createCreateViewCall,
@@ -31,8 +31,8 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
   validateNoDirectMatchChild(children)
 
   // 标记需要的导入
-  ctx.imports.Fragment = true
-  ctx.imports.createView = true
+  markImport(ctx, 'Fragment')
+  markImport(ctx, 'createView')
 
   const fragmentAlias = getAlias(ctx.vitarxAliases, 'Fragment')
   const createViewAlias = getAlias(ctx.vitarxAliases, 'createView')

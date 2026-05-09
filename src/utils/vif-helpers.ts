@@ -20,11 +20,9 @@ import {
  * v-if 链信息
  */
 export interface VIfChainInfo {
-  /** 链中的元素节点 */
   nodes: t.JSXElement[]
-  /** 条件表达式数组 */
   conditions: t.Expression[]
-  /** 结束索引 */
+  startIndex: number
   endIndex: number
 }
 
@@ -90,7 +88,7 @@ export function collectVIfChainInfo(nodes: t.JSXElement[]): VIfChainInfo {
     throw createError('E008', node, 'Element missing v-if/v-else-if/v-else directive')
   }
 
-  return { nodes, conditions, endIndex: nodes.length - 1 }
+  return { nodes, conditions, startIndex: 0, endIndex: nodes.length - 1 }
 }
 
 /**
@@ -170,5 +168,5 @@ function collectSingleChainFromFragment(
     }
   }
 
-  return { nodes, conditions, endIndex: j - 1 }
+  return { nodes, conditions, startIndex, endIndex: j - 1 }
 }

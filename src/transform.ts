@@ -56,7 +56,7 @@ function createParserOptions(): ParserOptions {
  * 设置 API 别名
  */
 function setupAliases(ctx: TransformContext, program: t.Program): void {
-  const { vitarxImports } = collectExistingImports(program)
+  const vitarxImports = collectExistingImports(program)
   const localBindings = collectLocalBindings(program)
   const allNames = new Set([...localBindings])
 

@@ -53,30 +53,14 @@ export function processJSXElement(path: NodePath<t.JSXElement>, ctx: TransformCo
  * 校验 Match 组件必须在 Switch 内使用
  */
 function validateMatchInSwitch(path: NodePath<t.JSXElement>): void {
-  const parent = path.parentPath
-  if (!parent) {
-    throw createError('E012', path.node)
-  }
-
-  // 检查父元素是否是 Switch
-  if (parent.node.type === 'JSXElement') {
-    const parentName = getJSXElementName(parent.node)
-    if (parentName === 'Switch') {
-      return
+  let current: NodePath<t.Node> | null = path.parentPath
+  while (current) {
+    if (current.node.type === 'JSXElement') {
+      const name = getJSXElementName(current.node)
+      if (name === 'Switch') return
     }
+    current = current.parentPath
   }
-
-  // 检查是否在 Fragment 内且 Fragment 的父元素是 Switch
-  if (parent.node.type === 'JSXFragment' || parent.node.type === 'JSXElement') {
-    const grandParent = parent.parentPath
-    if (grandParent?.node.type === 'JSXElement') {
-      const grandParentName = getJSXElementName(grandParent.node)
-      if (grandParentName === 'Switch') {
-        return
-      }
-    }
-  }
-
   throw createError('E012', path.node)
 }
 
@@ -191,26 +175,40 @@ function processElementChildren(
 
 /**
  * 转换单个 v-if 元素
+ * 该函数处理带有 v-if 指令的 JSX 元素，将其转换为条件渲染的函数调用
+ * @param node - 要转换的 JSX 元素节点
+ * @param ctx - 转换上下文，包含转换所需的环境信息
+ * @returns 返回转换后的条件渲染函数调用表达式，如果转换失败则返回 null
  */
 function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallExpression | null {
+  // 首先检查节点是否是有效的 v-if 元素
   if (!isVIf(node)) return null
 
+  // 获取 v-if 指令的值（条件表达式）
   const condition = getDirectiveValue(node, 'v-if')
+  // 如果没有找到条件表达式，则返回 null
   if (!condition) return null
 
+  // 移除节点上的 v-if 相关指令链
   removeVIfChainDirectives(node)
 
+  // 转换 JSX 元素，不保留原始属性
   const transformedNode = transformJSXElement(node, ctx, false)
+  // 如果转换失败，返回 null
   if (!transformedNode) return null
 
+  // 创建条件分支的函数调用
   const branchCall = createBranch(
+    // 包含条件数组和对应的分支函数
     { conditions: [condition], branches: [createArrowFunction(transformedNode)] },
     ctx
   )
 
+  // 保留原始节点的位置信息
   if (node.loc) {
     branchCall.loc = node.loc
   }
 
+  // 返回转换后的分支函数调用
   return branchCall
 }

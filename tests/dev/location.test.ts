@@ -38,7 +38,7 @@ describe('Dev 模式', () => {
     const code = `const App = () => <div v-if={show}>visible</div>`
     const result = await compile(code, devOptions)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
         children: "visible"
       }, {

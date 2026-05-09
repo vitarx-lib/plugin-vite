@@ -4,7 +4,7 @@
  */
 import * as t from '@babel/types'
 import { type Expression, isJSXElement, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
-import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
+import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS, V_IF_CHAIN_DIRECTIVES } from '../constants/index.js'
 import { createError } from '../error.js'
 import { isWhitespaceJSXText } from './ast-guards.js'
 
@@ -58,7 +58,7 @@ export function isPureCompileComponent(name: string): boolean {
  * 判断名称是否为组件（首字母大写）
  */
 export function isComponent(name: string): boolean {
-  return name[0] === name[0]?.toUpperCase()
+  return name.length > 0 && name[0] === name[0].toUpperCase()
 }
 
 /**
@@ -83,8 +83,6 @@ export function getJSXAttributeByName(node: JSXElement, name: string): JSXAttrib
   }
   return undefined
 }
-
-const V_IF_CHAIN_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else'])
 
 /**
  * 检查元素是否具有指定指令

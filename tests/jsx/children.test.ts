@@ -28,7 +28,7 @@ describe('Children 处理', () => {
     const code = `const App = () => <div>{cond ? 'yes' : 'no'}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(cond) ? 0 : 1, [() => 'yes', () => 'no'])
       });"
@@ -39,7 +39,7 @@ describe('Children 处理', () => {
     const code = `const App = () => <div>{show ? 'yes' : 'no'}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => 'yes', () => 'no'])
       });"
@@ -174,7 +174,7 @@ describe('边界情况', () => {
     const code = `const App = () => <div>{show ? <span>yes</span> : <span>no</span>}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "yes"

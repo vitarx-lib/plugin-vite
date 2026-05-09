@@ -97,17 +97,27 @@ function separateLogicAndRender(functionCode: string): SeparationResult {
   }
 
   // 按位置排序，从后向前替换以保持索引正确
-  uiNodes.sort((a, b) => b.start - a.start)
+  uiNodes.sort((a, b) => a.start - b.start)
+  const filteredNodes: Array<{ start: number; end: number }> = []
+  for (const node of uiNodes) {
+    const isContained = filteredNodes.some(
+      parent => node.start >= parent.start && node.end <= parent.end
+    )
+    if (!isContained) {
+      filteredNodes.push(node)
+    }
+  }
+  filteredNodes.sort((a, b) => b.start - a.start)
 
   // 提取 UI 代码
-  const renderCode = uiNodes
+  const renderCode = filteredNodes
     .map(n => wrappedCode.slice(n.start, n.end))
     .reverse()
     .join('\n')
 
   // 移除 UI 代码后的逻辑代码
   let logicCode = wrappedCode
-  for (const node of uiNodes) {
+  for (const node of filteredNodes) {
     logicCode = logicCode.slice(0, node.start) + logicCode.slice(node.end)
   }
 

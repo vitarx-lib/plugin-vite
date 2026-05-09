@@ -31,19 +31,14 @@ export interface VitePluginVitarxOptions {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const IS_V8 = version.startsWith('8')
-let viteTransform: (
+
+type ViteTransformFn = (
   code: string,
   filename: string,
   options: undefined,
   inMap: object | undefined,
   config: ResolvedConfig
 ) => ReturnType<typeof transformWithOxc> | ReturnType<typeof transformWithEsbuild>
-if (IS_V8) {
-  // @ts-ignore
-  viteTransform = (await import('vite')).transformWithOxc
-} else {
-  viteTransform = (await import('vite')).transformWithEsbuild
-}
 
 /**
  * vite-plugin-vitarx
@@ -63,6 +58,7 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
   let isDEV = false
   let isSSR = false
   let viteConfig: ResolvedConfig
+  let viteTransform: ViteTransformFn
   return {
     name: 'vite-plugin-vitarx',
     enforce: 'pre',
@@ -84,8 +80,7 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
         }
       }
     },
-    configResolved(config) {
-      // 根据最终的配置结果，确定是否是 SSR 模式
+    async configResolved(config) {
       if (!isSSR) {
         isSSR = !!config.build?.ssr
         config.define!['__VITARX_SSR__'] = JSON.stringify(isSSR)
@@ -98,12 +93,18 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
         sourceMap: true,
         transformClassNameToClass: options?.transformClassNameToClass ?? false
       }
+      viteConfig = config
+      if (IS_V8) {
+        viteTransform = (await import('vite')).transformWithOxc
+      } else {
+        viteTransform = (await import('vite')).transformWithEsbuild
+      }
     },
     async transform(code, id) {
       if (!shouldTransform(id)) return null
       const result = await transform(code, id, compileOptions!)
       if (!result) return null
-      return viteTransform(result.code, id, undefined, result.map || undefined, viteConfig!)
+      return viteTransform(result.code, id, undefined, result.map || undefined, viteConfig)
     }
   }
 }

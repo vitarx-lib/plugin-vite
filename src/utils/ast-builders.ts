@@ -8,7 +8,6 @@ import {
   type CallExpression,
   type Expression,
   isIdentifier,
-  isStringLiteral,
   type ObjectExpression
 } from '@babel/types'
 import type { SourceLocation } from 'acorn'
@@ -37,14 +36,7 @@ export function createAccessorCall(
   key: Expression,
   alias?: string
 ): CallExpression {
-  let keyArg: Expression
-  if (isIdentifier(key)) {
-    keyArg = t.stringLiteral(key.name)
-  } else if (isStringLiteral(key)) {
-    keyArg = key
-  } else {
-    keyArg = key
-  }
+  const keyArg = isIdentifier(key) ? t.stringLiteral(key.name) : key
 
   return t.callExpression(t.identifier(alias || 'accessor'), [object, keyArg])
 }

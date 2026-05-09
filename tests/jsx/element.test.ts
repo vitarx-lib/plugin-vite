@@ -91,7 +91,7 @@ describe('成员表达式组件 (Obj.Key)', () => {
     const code = `const App = () => <Obj.Key v-if={show} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch, unref } from "vitarx";
+      "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView(Obj.Key)]);"
     `)
   })
@@ -116,7 +116,7 @@ describe('成员表达式组件 (Obj.Key)', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch, unref } from "vitarx";
+      "import { createView, Fragment, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView(Obj.Key, {
           children: "A"

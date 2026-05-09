@@ -13,24 +13,19 @@ import { collectPatternBindings } from '../../utils/index.js'
  * @param program - AST Program 节点
  * @returns 本地变量名集合和 vitarx 导入映射
  */
-export function collectExistingImports(program: t.Program): {
-  localNames: Set<string>
-  vitarxImports: Map<string, string>
-} {
-  const localNames = new Set<string>()
+export function collectExistingImports(program: t.Program): Map<string, string> {
   const vitarxImports = new Map<string, string>()
 
   for (const node of program.body) {
     if (node.type !== 'ImportDeclaration') continue
 
-    // 跳过 import type 和 import typeof 语句
     if (node.importKind === 'type' || node.importKind === 'typeof') continue
 
     const source = node.source.value
-    for (const specifier of node.specifiers) {
-      localNames.add(specifier.local.name)
+    if (source !== VITARX_MODULE) continue
 
-      if (source === VITARX_MODULE && specifier.type === 'ImportSpecifier') {
+    for (const specifier of node.specifiers) {
+      if (specifier.type === 'ImportSpecifier') {
         const importedName =
           specifier.imported.type === 'Identifier'
             ? specifier.imported.name
@@ -40,7 +35,7 @@ export function collectExistingImports(program: t.Program): {
     }
   }
 
-  return { localNames, vitarxImports }
+  return vitarxImports
 }
 
 /**

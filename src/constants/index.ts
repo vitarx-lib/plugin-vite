@@ -37,6 +37,8 @@ export const PURE_COMPILE_COMPONENTS = ['Switch', 'Match', 'IfBlock'] as const
  */
 export const DIRECTIVE_PREFIX = 'v-'
 
+export const V_IF_CHAIN_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else'])
+
 /**
  * 纯函数注释
  */
