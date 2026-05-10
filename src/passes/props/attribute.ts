@@ -4,14 +4,6 @@
  * @module passes/props/attribute
  */
 import * as t from '@babel/types'
-import {
-  isBooleanLiteral,
-  isIdentifier,
-  isJSXExpressionContainer,
-  isMemberExpression,
-  isNumericLiteral,
-  isStringLiteral
-} from '@babel/types'
 import { markImport, TransformContext } from '../../context.js'
 import { createError } from '../../error.js'
 import { getAlias } from '../../utils/index.js'
@@ -95,11 +87,11 @@ export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression 
     return t.booleanLiteral(true)
   }
 
-  if (isStringLiteral(value)) {
+  if (t.isStringLiteral(value)) {
     return value
   }
 
-  if (isJSXExpressionContainer(value)) {
+  if (t.isJSXExpressionContainer(value)) {
     if (value.expression.type === 'JSXEmptyExpression') {
       return t.booleanLiteral(true)
     }
@@ -123,52 +115,80 @@ export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression 
  * @returns 对象属性或方法节点
  */
 export function createProperty(
-  key: string, // 属性名称字符串
-  value: t.Expression, // 属性值的表达式节点
-  ctx: TransformContext // 转换上下文对象，包含转换所需的环境信息
+  key: string, // 属性名称，字符串类型
+  value: t.Expression, // 属性值表达式，使用 t.Expression 类型表示
+  ctx: TransformContext // 转换上下文，包含转换过程中的相关信息
 ): t.ObjectProperty | t.ObjectMethod {
-  // 返回对象属性或方法节点
+  // 返回类型为对象属性或对象方法
   // 创建属性名的字面量节点
   const keyNode = t.stringLiteral(key)
 
-  // 处理静态值：字符串、数字、布尔值和null字面量
-  if (
-    isStringLiteral(value) || // 检查是否为字符串字面量
-    isNumericLiteral(value) || // 检查是否为数字字面量
-    isBooleanLiteral(value) || // 检查是否为布尔值字面量
-    t.isNullLiteral(value) // 检查是否为null字面量
-  ) {
-    // 对于静态值，直接创建对象属性节点
+  // 如果是静态值，直接创建对象属性
+  if (isStaticValue(value)) {
     return t.objectProperty(keyNode, value)
   }
 
-  // 处理标识符类型的值
-  if (isIdentifier(value)) {
-    // 如果值是标识符且在引用变量集合中
+  // 如果是标识符（变量名）
+  if (t.isIdentifier(value)) {
+    // 特殊处理 children 属性或不在 refVariables 中的变量
+    if (key === 'children' || ctx.nonRefVariables.has(value.name)) {
+      return t.objectProperty(keyNode, value)
+    }
+    // 如果是 ref 变量，创建 getter 方法返回 ref 的 value
     if (ctx.refVariables.has(value.name)) {
-      // 创建getter方法，返回引用的value属性
       return createGetter(
         keyNode,
         t.returnStatement(t.memberExpression(value, t.identifier('value')))
       )
     }
-    // 特殊处理children属性
-    if (key === 'children') {
-      // children属性不使用unref，保持原样
-      return t.objectProperty(keyNode, value)
-    }
-    // 其他标识符属性创建unref getter
+    // 其他标识符属性创建 unref getter
     return createUnrefGetter(keyNode, value, ctx)
   }
 
-  // 处理成员表达式类型的值
-  if (isMemberExpression(value)) {
-    // 创建unref getter处理成员表达式
+  // 如果是成员表达式（如 obj.property）
+  if (t.isMemberExpression(value)) {
     return createUnrefGetter(keyNode, value, ctx)
   }
 
-  // 默认情况：创建getter方法返回原始值
+  // 如果是调用表达式（如 function()）
+  if (t.isCallExpression(value)) {
+    return createUnrefGetter(keyNode, value, ctx)
+  }
+
+  // 默认情况，创建 getter 方法返回值
   return createGetter(keyNode, t.returnStatement(value))
+}
+
+/**
+ * 判断给定的表达式是否为静态值
+ * 静态值指的是那些可以在编译时确定值，不会在运行时改变的表达式
+ * @param value - 要检查的AST表达式节点
+ * @returns 如果是静态值返回true，否则返回false
+ */
+function isStaticValue(value: t.Expression): boolean {
+  // 使用switch语句检查表达式的类型
+  switch (value.type) {
+    // 字符串字面量是静态值
+    case 'StringLiteral':
+    // 数字字面量是静态值
+    case 'NumericLiteral':
+    // 布尔字面量是静态值
+    case 'BooleanLiteral':
+    // null字面量是静态值
+    case 'NullLiteral':
+    // 箭头函数表达式是静态值
+    case 'ArrowFunctionExpression':
+    // 函数表达式是静态值
+    case 'FunctionExpression':
+    // 对象表达式是静态值
+    case 'ObjectExpression':
+    // 数组表达式是静态值
+    case 'ArrayExpression':
+      return true
+    // 其他类型的表达式都不是静态值
+    default:
+      return false
+  }
 }
 
 /**

@@ -12,6 +12,7 @@ import type { CompileOptions } from './types.js'
 import {
   collectExistingImports,
   collectLocalBindings,
+  collectNonRefVariables,
   collectRefApiAliases,
   collectRefVariables,
   injectHMRSupport,
@@ -95,6 +96,7 @@ function collectRefInfo(ctx: TransformContext, program: t.Program): void {
   const refApiAliases = collectRefApiAliases(program)
   ctx.refApiAliases = refApiAliases
   ctx.refVariables = collectRefVariables(program, refApiAliases)
+  ctx.nonRefVariables = collectNonRefVariables(program)
 }
 /**
  * 转换 AST

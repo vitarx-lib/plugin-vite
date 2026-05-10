@@ -7,6 +7,7 @@
 export {
   collectExistingImports,
   collectLocalBindings,
+  collectNonRefVariables,
   collectRefApiAliases,
   collectRefVariables,
   injectImports

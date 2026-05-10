@@ -4,5 +4,5 @@
  */
 
 export { collectExistingImports, collectLocalBindings } from './collectImports.js'
-export { collectRefApiAliases, collectRefVariables } from './collectRefVariables.js'
+export { collectRefApiAliases, collectNonRefVariables, collectRefVariables } from './collectRefVariables.js'
 export { injectImports } from './injectImports.js'

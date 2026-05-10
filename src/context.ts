@@ -82,6 +82,8 @@ export interface TransformContext {
   refApiAliases: RefApiAliases
   /** ref 变量名集合 */
   refVariables: Set<string>
+  /** 确定非 ref 的变量名集合（函数声明、箭头函数/函数表达式变量） */
+  nonRefVariables: Set<string>
   /** builder 函数的本地别名（用于识别纯构建组件） */
   builderAlias: string | null
   /** 已处理的 AST 节点追踪集合 */
@@ -142,6 +144,7 @@ export function createContext(
       computed: null
     },
     refVariables: new Set(),
+    nonRefVariables: new Set(),
     builderAlias: null,
     processedNodes: new WeakSet<Node>(),
     pureCommentedNodes: new WeakSet(),

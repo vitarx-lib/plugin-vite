@@ -104,6 +104,54 @@ function collectRefVariablesFromNode(
 }
 
 /**
+ * 收集确定不是 ref 的变量
+ * 包括函数声明、箭头函数和函数表达式变量
+ * @param program - AST Program 节点
+ * @returns 非 ref 变量名集合
+ */
+export function collectNonRefVariables(program: t.Program): Set<string> {
+  const nonRefVariables = new Set<string>()
+
+  for (const node of program.body) {
+    collectNonRefFromNode(node, nonRefVariables)
+  }
+
+  return nonRefVariables
+}
+
+function collectNonRefFromNode(node: t.Node, nonRefVariables: Set<string>): void {
+  if (node.type === 'FunctionDeclaration' && node.id) {
+    nonRefVariables.add(node.id.name)
+    if (node.body) {
+      for (const stmt of node.body.body) {
+        collectNonRefFromNode(stmt, nonRefVariables)
+      }
+    }
+  } else if (node.type === 'VariableDeclaration') {
+    for (const decl of node.declarations) {
+      if (!decl.init) continue
+      if (decl.id.type !== 'Identifier') continue
+      const init = decl.init
+      if (
+        init.type === 'ArrowFunctionExpression' ||
+        init.type === 'FunctionExpression'
+      ) {
+        nonRefVariables.add(decl.id.name)
+      }
+    }
+  } else if (node.type === 'ExportNamedDeclaration') {
+    if (node.declaration) {
+      collectNonRefFromNode(node.declaration, nonRefVariables)
+    }
+  } else if (node.type === 'ExportDefaultDeclaration') {
+    const decl = node.declaration
+    if (decl.type === 'FunctionDeclaration' && decl.id) {
+      nonRefVariables.add(decl.id.name)
+    }
+  }
+}
+
+/**
  * 构建 API 名称集合
  */
 function buildApiNameSets(refApiAliases: RefApiAliases): {

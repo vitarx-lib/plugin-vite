@@ -46,6 +46,54 @@ describe('Props getter 行为', () => {
     `)
   })
 
+  it('内联箭头函数属性直接赋值', async () => {
+    const code = `const App = () => <div onClick={() => console.log('click')}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": () => console.log('click')
+      });"
+    `)
+  })
+
+  it('内联函数表达式属性直接赋值', async () => {
+    const code = `const App = () => <div onClick={function() { console.log('click') }}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": function () {
+          console.log('click');
+        }
+      });"
+    `)
+  })
+
+  it('内联对象属性直接赋值', async () => {
+    const code = `const App = () => <div style={{ color: 'red' }}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "style": {
+          color: 'red'
+        }
+      });"
+    `)
+  })
+
+  it('内联数组属性直接赋值', async () => {
+    const code = `const App = () => <div class={['a', 'b']}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        "class": ['a', 'b']
+      });"
+    `)
+  })
+
   it('Identifier 属性生成 getter', async () => {
     const code = `const App = () => <div class={className}></div>`
     const result = await compile(code)
@@ -273,6 +321,97 @@ describe('ref 变量优化', () => {
         },
         get "b"() {
           return unref(b);
+        }
+      });"
+    `)
+  })
+})
+
+describe('nonRef 优化', () => {
+  it('函数声明作为属性值不使用 unref', async () => {
+    const code = `function handleClick() {} const App = () => <div onClick={handleClick}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      function handleClick() {}
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": handleClick
+      });"
+    `)
+  })
+
+  it('箭头函数变量作为属性值不使用 unref', async () => {
+    const code = `const fn = () => {}; const App = () => <div onClick={fn}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const fn = () => {};
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": fn
+      });"
+    `)
+  })
+
+  it('函数表达式变量作为属性值不使用 unref', async () => {
+    const code = `const fn = function() {}; const App = () => <div onClick={fn}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const fn = function () {};
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": fn
+      });"
+    `)
+  })
+
+  it('导出的函数声明作为属性值不使用 unref', async () => {
+    const code = `export function handleClick() {} const App = () => <div onClick={handleClick}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      export function handleClick() {}
+      const App = () => /* @__PURE__ */createView("div", {
+        "onClick": handleClick
+      });"
+    `)
+  })
+})
+
+describe('CallExpression 属性', () => {
+  it('函数调用表达式使用 unref 包裹', async () => {
+    const code = `const App = () => <div class={getStyle()}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        get "class"() {
+          return unref(getStyle());
+        }
+      });"
+    `)
+  })
+
+  it('方法调用表达式使用 unref 包裹', async () => {
+    const code = `const App = () => <div class={obj.getStyle()}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        get "class"() {
+          return unref(obj.getStyle());
+        }
+      });"
+    `)
+  })
+
+  it('带参数的函数调用使用 unref 包裹', async () => {
+    const code = `const App = () => <div class={compute('a', 1)}></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, unref } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        get "class"() {
+          return unref(compute('a', 1));
         }
       });"
     `)
