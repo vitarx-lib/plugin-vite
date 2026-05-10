@@ -1,15 +1,22 @@
-# [1.0.0-beta.2](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2026-05-09)
+# [1.0.0-beta.3](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2026-05-10)
+
+
+### Bug Fixes
+
+* **props:** 修复属性getter生成逻辑和支持null字面量 ([d102027](https://gitee.com/vitarx/plugin-vite/commits/d102027563a618e575d44b1b0991cac0b8f95c61))
+
+
+### Features
+
+* **jsx:** 新增成员表达式组件支持 ([00ac940](https://gitee.com/vitarx/plugin-vite/commits/00ac9408b566cc7f0d8a373cecc478df4249cec4))
+
+# [1.0.0-beta.1](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.0...v1.0.0-beta.1) (2026-05-08)
 
 
 ### Bug Fixes
 
 * **directives:** 修复 v-if 链处理BUG ([8fde9a2](https://gitee.com/vitarx/plugin-vite/commits/8fde9a27b9995bb205d9784a9b17a6c39f4f1f4f))
 * **jsx-helpers:** 修正 v-if 指令的命名空间格式识别问题 ([b5678cc](https://gitee.com/vitarx/plugin-vite/commits/b5678ccb4c2d47972eeef05445b28518a3dae050))
-
-
-### Features
-
-* **jsx:** 新增成员表达式组件支持 ([00ac940](https://gitee.com/vitarx/plugin-vite/commits/00ac9408b566cc7f0d8a373cecc478df4249cec4))
 
 # [1.0.0-beta.0](https://gitee.com/vitarx/plugin-vite/compare/v0.0.1-beta.8...v1.0.0-beta.0) (2026-05-07)
 
