@@ -180,10 +180,6 @@ function isStaticValue(value: t.Expression): boolean {
     case 'ArrowFunctionExpression':
     // 函数表达式是静态值
     case 'FunctionExpression':
-    // 对象表达式是静态值
-    case 'ObjectExpression':
-    // 数组表达式是静态值
-    case 'ArrayExpression':
       return true
     // 其他类型的表达式都不是静态值
     default:

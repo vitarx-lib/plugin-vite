@@ -70,26 +70,30 @@ describe('Props getter 行为', () => {
     `)
   })
 
-  it('内联对象属性直接赋值', async () => {
+  it('内联对象属性生成 getter', async () => {
     const code = `const App = () => <div style={{ color: 'red' }}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        "style": {
-          color: 'red'
+        get "style"() {
+          return {
+            color: 'red'
+          };
         }
       });"
     `)
   })
 
-  it('内联数组属性直接赋值', async () => {
+  it('内联数组属性生成 getter', async () => {
     const code = `const App = () => <div class={['a', 'b']}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        "class": ['a', 'b']
+        get "class"() {
+          return ['a', 'b'];
+        }
       });"
     `)
   })
