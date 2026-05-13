@@ -1,10 +1,16 @@
-# [1.0.0-beta.4](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2026-05-10)
+# [1.0.0-beta.5](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2026-05-13)
+
+
+### Bug Fixes
+
+* **props:** 将内联对象和数组属性改为生成 getter，修复响应性丢失问题 ([6be1f6a](https://gitee.com/vitarx/plugin-vite/commits/6be1f6a773e95b62f4bb51d02d5775d893be6237))
+
+# [1.0.0-beta.3](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2026-05-10)
 
 
 ### Bug Fixes
 
 * **props:** 修复属性getter生成逻辑和支持null字面量 ([d102027](https://gitee.com/vitarx/plugin-vite/commits/d102027563a618e575d44b1b0991cac0b8f95c61))
-* **props:** 将内联对象和数组属性改为生成 getter，修复响应性丢失问题 ([6be1f6a](https://gitee.com/vitarx/plugin-vite/commits/6be1f6a773e95b62f4bb51d02d5775d893be6237))
 
 # [1.0.0-beta.2](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2026-05-09)
 
