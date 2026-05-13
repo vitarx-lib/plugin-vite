@@ -25,12 +25,20 @@ import {
 } from '../../utils/index.js'
 
 /**
- * 处理成员表达式，生成 accessor 调用
+ * 处理成员表达式
+ * object 为简单标识符时使用 accessor（细粒度追踪）
+ * object 为其他表达式（嵌套成员访问等）时降级为 expr（粗粒度追踪）
  */
-function handleMemberExpression(expr: t.MemberExpression, ctx: TransformContext): t.CallExpression {
-  markImport(ctx, 'accessor')
-  const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
-  return createAccessorCall(expr.object, expr.property as t.Expression, accessorAlias)
+function handleMemberExpression(
+  expr: t.MemberExpression,
+  ctx: TransformContext
+): t.CallExpression | t.Expression {
+  if (isIdentifier(expr.object)) {
+    markImport(ctx, 'accessor')
+    const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
+    return createAccessorCall(expr.object, expr.property as t.Expression, accessorAlias)
+  }
+  return wrapWithExpr(expr, ctx)
 }
 
 /**

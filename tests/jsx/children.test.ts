@@ -146,13 +146,46 @@ describe('多子元素处理', () => {
 })
 
 describe('边界情况', () => {
-  it('嵌套 MemberExpression', async () => {
+  it('嵌套 MemberExpression 降级为 expr', async () => {
     const code = `const App = () => <div>{props.data.nested.value}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => props.data.nested.value)
+      });"
+    `)
+  })
+
+  it('Ref 的 .value.length 降级为 expr', async () => {
+    const code = `const App = () => <div>{data.value.length}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => data.value.length)
+      });"
+    `)
+  })
+
+  it('Ref 的 .value 属性使用 accessor', async () => {
+    const code = `const App = () => <div>{data.value}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: accessor(props.data.nested, "value")
+        children: accessor(data, "value")
+      });"
+    `)
+  })
+
+  it('计算属性访问使用 accessor', async () => {
+    const code = `const App = () => <div>{obj[key]}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, accessor } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: accessor(obj, "key")
       });"
     `)
   })
