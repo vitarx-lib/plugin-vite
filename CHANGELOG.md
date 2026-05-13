@@ -1,4 +1,11 @@
-# [1.0.0-beta.5](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2026-05-13)
+# [1.0.0-beta.6](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2026-05-13)
+
+
+### Bug Fixes
+
+* **jsx:** 优化 JSXText 空白处理逻辑 ([b6b421b](https://gitee.com/vitarx/plugin-vite/commits/b6b421b5f253abd557c22e82e1e94b49fa70653c))
+
+# [1.0.0-beta.4](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2026-05-10)
 
 
 ### Bug Fixes
