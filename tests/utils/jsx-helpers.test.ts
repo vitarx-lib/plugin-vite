@@ -367,7 +367,7 @@ describe('jsx-helpers', () => {
   })
 
   describe('filterEffectiveChildren', () => {
-    it('过滤空白文本节点', () => {
+    it('空白文本节点被过滤', () => {
       const element = createJSXElement('div', [], [
         jsxText('   '),
         jsxText('hello'),

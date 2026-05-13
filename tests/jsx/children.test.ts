@@ -435,3 +435,203 @@ describe('数组方法调用', () => {
     `)
   })
 })
+
+describe('空字符串子元素', () => {
+  it('空字符串字面量作为唯一子元素保留', async () => {
+    const code = `const App = () => <div>{""}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ""
+      });"
+    `)
+  })
+
+  it('空字符串字面量（单引号）作为唯一子元素保留', async () => {
+    const code = `const App = () => <div>{''}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ''
+      });"
+    `)
+  })
+
+  it('空字符串与文本混合', async () => {
+    const code = `const App = () => <div>text{""}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["text", ""]
+      });"
+    `)
+  })
+
+  it('文本与空字符串混合', async () => {
+    const code = `const App = () => <div>{""}text</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["", "text"]
+      });"
+    `)
+  })
+
+  it('多个空字符串子元素保留', async () => {
+    const code = `const App = () => <div>{""}{""}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["", ""]
+      });"
+    `)
+  })
+
+  it('空字符串与元素混合', async () => {
+    const code = `const App = () => <div>{""}<span>child</span></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["", /* @__PURE__ */createView("span", {
+          children: "child"
+        })]
+      });"
+    `)
+  })
+
+  it('空字符串与 Identifier 混合', async () => {
+    const code = `const App = () => <div>{""}{name}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["", name]
+      });"
+    `)
+  })
+
+  it('空字符串与文本和元素混合', async () => {
+    const code = `const App = () => <div>Hello{""}<span>world</span></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["Hello", "", /* @__PURE__ */createView("span", {
+          children: "world"
+        })]
+      });"
+    `)
+  })
+
+  it('空格字符串字面量作为子元素保留', async () => {
+    const code = `const App = () => <div>{' '}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ' '
+      });"
+    `)
+  })
+
+  it('空格字符串与文本混合', async () => {
+    const code = `const App = () => <div>Hello{' '}World</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["Hello", ' ', "World"]
+      });"
+    `)
+  })
+
+  it('多个空格字符串原样保留', async () => {
+    const code = `const App = () => <div>{'   '}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: '   '
+      });"
+    `)
+  })
+
+  it('多个空格字符串与文本混合原样保留', async () => {
+    const code = `const App = () => <div>Hello{'   '}World</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["Hello", '   ', "World"]
+      });"
+    `)
+  })
+})
+
+describe('换行符子元素', () => {
+  it('JSXText 纯换行被忽略', async () => {
+    const code = `const App = () => <div></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div");"
+    `)
+  })
+  it('JSXText 多个换行被忽略', async () => {
+    const code = `const App = () => <div>\n\n\n</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div");"
+    `)
+  })
+  it('JSXText 换行与空格混合被忽略', async () => {
+    const code = `const App = () => <div>  \n  \n  </div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div");"
+    `)
+  })
+  it('JSXText 换行与文本混合保留文本', async () => {
+    const code = `const App = () => <div>\nHello\n</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: "Hello"
+      });"
+    `)
+  })
+  it('JSXText 多行文本应该聚合为一行，换行以空格代替', async () => {
+    const code = `const App = () => <div>
+  line1
+  line2
+</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: "line1 line2"
+      });"
+    `)
+  })
+  it('JSXText 换行分隔文本与元素', async () => {
+    const code = `const App = () => <div>Hello\n<span>World</span></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["Hello", /* @__PURE__ */createView("span", {
+          children: "World"
+        })]
+      });"
+    `)
+  })
+})
