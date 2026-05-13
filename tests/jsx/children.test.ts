@@ -87,7 +87,7 @@ describe('多子元素处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: ["Hello", 'World', "!"]
+        children: ["Hello ", 'World', "!"]
       });"
     `)
   })
@@ -109,7 +109,7 @@ describe('多子元素处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: ["Hello", name, "!", /* @__PURE__ */createView("span", {
+        children: ["Hello ", name, "!", /* @__PURE__ */createView("span", {
           children: "child"
         })]
       });"
@@ -574,6 +574,113 @@ describe('空字符串子元素', () => {
   })
 })
 
+describe('JSXText 空白处理', () => {
+  it('表达式之间的 JSXText 保留空白', async () => {
+    const code = `const App = () => <p>{title} - {heading}</p>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("p", {
+        children: [title, " - ", heading]
+      });"
+    `)
+  })
+
+  it('多行格式化的表达式间 JSXText', async () => {
+    const code = `const App = () => (
+      <p>
+        {title} - {heading}
+      </p>
+    )`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("p", {
+        children: [title, " - ", heading]
+      });"
+    `)
+  })
+
+  it('表达式前仅有空白', async () => {
+    const code = `const App = () => <p>  {title}</p>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("p", {
+        children: title
+      });"
+    `)
+  })
+
+  it('表达式后仅有空白', async () => {
+    const code = `const App = () => <p>{title}  </p>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("p", {
+        children: title
+      });"
+    `)
+  })
+
+  it('元素之间的空白 JSXText 被忽略', async () => {
+    const code = `const App = () => (
+      <div>
+        <span>A</span>
+        <span>B</span>
+      </div>
+    )`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: [/* @__PURE__ */createView("span", {
+          children: "A"
+        }), /* @__PURE__ */createView("span", {
+          children: "B"
+        })]
+      });"
+    `)
+  })
+
+  it('文本与元素之间仅有空白', async () => {
+    const code = `const App = () => <div>Hello <span>World</span></div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: ["Hello ", /* @__PURE__ */createView("span", {
+          children: "World"
+        })]
+      });"
+    `)
+  })
+
+  it('元素与文本之间仅有空白', async () => {
+    const code = `const App = () => <div><span>Hello</span> World</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: [/* @__PURE__ */createView("span", {
+          children: "Hello"
+        }), " World"]
+      });"
+    `)
+  })
+
+  it('多行文本中换行折叠为空格', async () => {
+    const code = `const App = () => <div>line1\nline2</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: "line1 line2"
+      });"
+    `)
+  })
+})
+
 describe('换行符子元素', () => {
   it('JSXText 纯换行被忽略', async () => {
     const code = `const App = () => <div></div>`
@@ -605,7 +712,7 @@ describe('换行符子元素', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: "Hello"
+        children: " Hello "
       });"
     `)
   })
@@ -618,7 +725,7 @@ describe('换行符子元素', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: "line1 line2"
+        children: " line1 line2 "
       });"
     `)
   })
@@ -628,7 +735,7 @@ describe('换行符子元素', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: ["Hello", /* @__PURE__ */createView("span", {
+        children: ["Hello ", /* @__PURE__ */createView("span", {
           children: "World"
         })]
       });"

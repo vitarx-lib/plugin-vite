@@ -77,9 +77,8 @@ export function processChildren(children: t.Node[], ctx: TransformContext): t.Ex
  */
 function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | null {
   if (isJSXText(node)) {
-    const trimmed = node.value.trim()
-    if (!trimmed) return null
-    const collapsed = trimmed.replace(/\s+/g, ' ')
+    if (!node.value.trim()) return null
+    const collapsed = node.value.replace(/\s+/g, ' ')
     return t.stringLiteral(collapsed)
   }
 
