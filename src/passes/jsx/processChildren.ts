@@ -79,14 +79,17 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
   if (isJSXText(node)) {
     const trimmed = node.value.trim()
     if (!trimmed) return null
-    return t.stringLiteral(trimmed)
+    const collapsed = trimmed.replace(/\s+/g, ' ')
+    return t.stringLiteral(collapsed)
   }
 
+  // 处理 JSX 表达式容器，递归处理容器内的表达式
   if (isJSXExpressionContainer(node)) {
     if (node.expression.type === 'JSXEmptyExpression') return null
-    return processChildExpression(node.expression as t.Expression, ctx)
+    return processChildExpression(node.expression, ctx)
   }
 
+  // 处理 JSX 展开表达式，递归处理展开表达式
   if (node.type === 'JSXSpreadChild') {
     return processChildExpression(node.expression, ctx)
   }
@@ -110,17 +113,12 @@ function processChildNode(node: t.Node, ctx: TransformContext): t.Expression | n
  * 根据表达式类型生成对应的运行时 API 调用
  * CallExpression 在此用 expr 包装（用户函数调用需要响应式追踪）
  */
-/**
- * 处理子表达式函数
- * @param {t.Expression} expr - 要处理的表达式节点
- * @param {TransformContext} ctx - 转换上下文，包含转换所需的环境信息
- * @returns {t.Expression} 处理后的表达式节点
- */
-function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Expression {
-  // 如果是简单标识符，直接返回
-  if (isIdentifier(expr)) {
-    return expr
-  }
+function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Expression | null {
+  // 字符串表达式原样保留
+  if (t.isStringLiteral(expr)) return expr
+
+  // 标识符表达式（如 variable），原样保留
+  if (isIdentifier(expr)) return expr
 
   // 如果是成员表达式（如 obj.property），调用专门的处理函数
   if (isMemberExpression(expr)) {

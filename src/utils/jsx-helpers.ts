@@ -3,8 +3,18 @@
  * @module utils/jsx-helpers
  */
 import * as t from '@babel/types'
-import { type Expression, isJSXElement, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
-import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS, V_IF_CHAIN_DIRECTIVES } from '../constants/index.js'
+import {
+  type Expression,
+  isJSXElement,
+  isJSXText,
+  type JSXAttribute,
+  type JSXElement
+} from '@babel/types'
+import {
+  DIRECTIVE_PREFIX,
+  PURE_COMPILE_COMPONENTS,
+  V_IF_CHAIN_DIRECTIVES
+} from '../constants/index.js'
 import { createError } from '../error.js'
 import { isWhitespaceJSXText } from './ast-guards.js'
 
@@ -41,9 +51,10 @@ export function resolveJSXElementType(node: JSXElement): t.Expression | null {
  * Obj.Key → Obj.Key, A.B.C → A.B.C
  */
 function jsxMemberExprToMemberExpr(node: t.JSXMemberExpression): t.MemberExpression {
-  const object = node.object.type === 'JSXMemberExpression'
-    ? jsxMemberExprToMemberExpr(node.object)
-    : t.identifier((node.object as t.JSXIdentifier).name)
+  const object =
+    node.object.type === 'JSXMemberExpression'
+      ? jsxMemberExprToMemberExpr(node.object)
+      : t.identifier((node.object as t.JSXIdentifier).name)
   return t.memberExpression(object, t.identifier(node.property.name))
 }
 
@@ -221,20 +232,28 @@ export function filterWhitespaceChildren(children: t.Node[]): t.Node[] {
 }
 
 /**
+ * 判断子节点是否为有效子元素
+ * JSX 注释和纯空白文本视为无效
+ * @param child - 子节点
+ * @returns 是否有效
+ */
+function isEffectiveChild(child: t.Node): boolean {
+  if (isJSXText(child)) {
+    return child.value.trim().length > 0
+  }
+  if (child.type === 'JSXExpressionContainer') {
+    return child.expression.type !== 'JSXEmptyExpression'
+  }
+  return true
+}
+
+/**
  * 检查 JSX 元素是否有有效的子元素
  * @param node - JSX 元素节点
  * @returns 是否有有效子元素
  */
 export function hasEffectiveChildren(node: JSXElement): boolean {
-  return node.children.some(child => {
-    if (isJSXText(child)) {
-      return child.value.trim().length > 0
-    }
-    if (child.type === 'JSXExpressionContainer') {
-      return child.expression.type !== 'JSXEmptyExpression'
-    }
-    return true
-  })
+  return node.children.some(isEffectiveChild)
 }
 
 /**
@@ -243,15 +262,7 @@ export function hasEffectiveChildren(node: JSXElement): boolean {
  * @returns 有效子元素数组
  */
 export function filterEffectiveChildren(node: JSXElement): t.Node[] {
-  return node.children.filter(child => {
-    if (isJSXText(child)) {
-      return child.value.trim().length > 0
-    }
-    if (child.type === 'JSXExpressionContainer') {
-      return child.expression.type !== 'JSXEmptyExpression'
-    }
-    return true
-  })
+  return node.children.filter(isEffectiveChild)
 }
 
 /**
