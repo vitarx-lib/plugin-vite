@@ -58,6 +58,7 @@ function createMockContext(): TransformContext {
       computed: null
     },
     refVariables: new Set(),
+    nonRefVariables: new Set(),
     builderAlias: null,
     processedNodes: new WeakSet(),
     pureCommentedNodes: new WeakSet(),
