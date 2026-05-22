@@ -148,6 +148,22 @@ function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Ex
 }
 
 /**
+ * 处理条件分支中的表达式
+ * JSXElement/JSXFragment 和已转换的 API 调用（createView/branch 等）直接透传
+ * 其他表达式按 children 规则处理（如 CallExpression 需要 expr 包装等）
+ */
+function processBranchExpression(node: t.Node, ctx: TransformContext): t.Expression | null {
+  if (isJSXElement(node) || isJSXFragment(node)) {
+    return node as t.Expression
+  }
+  // 已转换的 API 调用（带 @__PURE__ 注释的 createView/branch 等）直接透传
+  if (node.type === 'CallExpression' && ctx.pureCommentedNodes.has(node)) {
+    return node as t.Expression
+  }
+  return processChildExpression(node as t.Expression, ctx)
+}
+
+/**
  * 处理条件表达式，转换为 branch 调用
  * 该函数接收一个条件表达式节点和转换上下文，将其转换为二元分支调用
  * @param node - 条件表达式节点，包含测试条件、 consequent 和 alternate 分支
@@ -163,9 +179,9 @@ function processConditionalExpression(
   const { test, consequent, alternate } = node
 
   // 处理真分支，如果处理结果为空则使用 null 字面量作为默认值
-  const processedConsequent = processChildNode(consequent, ctx) || t.nullLiteral()
+  const processedConsequent = processBranchExpression(consequent, ctx) || t.nullLiteral()
   // 处理假分支，如果处理结果为空则使用 null 字面量作为默认值
-  const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
+  const processedAlternate = processBranchExpression(alternate, ctx) || t.nullLiteral()
 
   // 创建并返回一个二元分支调用，传入测试条件、处理后的真分支和假分支
   return createBinaryBranch(test, processedConsequent, processedAlternate, ctx)
