@@ -4,8 +4,8 @@ import {
   createCommentView,
   EffectScope,
   getRenderer,
-  runComponent,
-  ValidChild
+  type RenderChild,
+  runComponent
 } from 'vitarx'
 import { diffComponentChange } from './utils.js'
 
@@ -60,7 +60,7 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   // 销毁旧的子树
   instance.subView.dispose()
   // 创建新的子树
-  let subView: ValidChild
+  let subView: RenderChild
   try {
     subView = runComponent(instance, () => newComponent(view.props))
   } catch (e) {

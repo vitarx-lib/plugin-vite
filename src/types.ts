@@ -1,4 +1,4 @@
-import type { RenderUnit, View } from 'vitarx'
+import type { Renderable, View } from 'vitarx'
 
 /**
  * 编译选项
@@ -27,7 +27,7 @@ export interface SwitchProps {
    *
    * 当所有 `Match` 都不匹配时，渲染该内容
    */
-  fallback?: RenderUnit
+  fallback?: Renderable
   /**
    * 子元素列表
    *
@@ -44,7 +44,7 @@ export interface MatchProps {
   /**
    * 匹配成功时渲染的内容
    */
-  children: RenderUnit
+  children: Renderable
 }
 declare global {
   namespace Vitarx {
