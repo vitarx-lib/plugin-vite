@@ -1,9 +1,11 @@
-# [1.0.0-beta.8](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2026-05-22)
+# [1.0.0](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.8...v1.0.0) (2026-05-27)
 
 
 ### Features
 
 * **jsx:** 支持嵌套三元表达式及复杂条件分支处理 ([b6db31b](https://gitee.com/vitarx/plugin-vite/commits/b6db31b2be2d5888906d79ef9f0fb2a3bed4b974))
+
+# [1.0.0-beta.7](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2026-05-21)
 
 # [1.0.0-beta.6](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2026-05-13)
 
