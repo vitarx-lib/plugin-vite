@@ -19,7 +19,7 @@
     "build": "vitest run && rimraf dist && tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "release": "release-cli"
+    "release": "npx change-push"
   },
   "files": [
     "dist",
