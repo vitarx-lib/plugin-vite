@@ -51,6 +51,7 @@ type ViteTransformFn = (
  * - 支持 className 转 class（仅原生 HTML 元素）
  *
  * @param options - 插件配置选项。
+ * @param [options.transformClassNameToClass=false] - 支持className。
  * @returns - vite插件对象。
  */
 export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
@@ -61,10 +62,9 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
   let viteTransform: ViteTransformFn
   return {
     name: 'vite-plugin-vitarx',
-    enforce: 'pre',
     config(config, env) {
       isDEV = env.command === 'serve' && !env.isPreview
-      isSSR = env.isSsrBuild === true
+      isSSR = env.isSsrBuild === true || !!config.build?.ssr
       return {
         define: {
           __VITARX_DEV__: JSON.stringify(isDEV),
@@ -81,10 +81,6 @@ export default function vitarx(options?: VitePluginVitarxOptions): Plugin {
       }
     },
     async configResolved(config) {
-      if (!isSSR) {
-        isSSR = !!config.build?.ssr
-        config.define!['__VITARX_SSR__'] = JSON.stringify(isSSR)
-      }
       compileOptions = {
         dev: isDEV,
         ssr: isSSR,
