@@ -1,4 +1,11 @@
-# [1.0.0](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.8...v1.0.0) (2026-05-27)
+## [1.0.1](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0...v1.0.1) (2026-06-03)
+
+
+### Features
+
+* **plugin:** 改进 SSR 判断 ([af410e3](https://gitee.com/vitarx/plugin-vite/commits/af410e333bb4ab635d634b18aa52113fb39f2681))
+
+# [1.0.0-beta.8](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2026-05-22)
 
 
 ### Features
