@@ -490,7 +490,7 @@ describe('HMR 协议结构', () => {
       // 验证 getComponentView 导入只出现一次
       const importCount = (
         result.match(
-          /import \{ getComponentView as __\$VITARX_GET_COMPONENT_VIEW\$__ \} from "vitarx"/g
+          /import \{ getComponentView as __\$VITARX_GET_COMPONENT_VIEW\$__ } from "vitarx"/g
         ) || []
       ).length
       expect(importCount).toBe(1)
@@ -547,6 +547,182 @@ describe('HMR 协议结构', () => {
       const result = await compile(code, hmrOptions)
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
       expect(result).toContain('branch')
+    })
+  })
+
+  describe('Builder 包装组件', () => {
+    it('builder 包装的组件支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        export const App = () => <div>test</div>
+        builder(App)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被识别并绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证使用包装组件的注册方式（传入两个参数）
+      expect(result).toMatch(/register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*App\)/)
+    })
+
+    it('builder 包装的组件不注入状态恢复', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        import { ref } from 'vitarx'
+        export const App = () => {
+          const count = ref(0)
+          return <div>{count}</div>
+        }
+        builder(App)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证不注入 memo 状态恢复
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
+      // 验证不注入状态保存代码
+      expect(result).not.toContain('__$VITARX_HMR_VIEW_STATE$__')
+    })
+
+    it('默认导出的 builder 包装组件支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        export default builder(() => <div>test</div>)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证生成了绑定 ID
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId')
+      // 验证注入了 hot.accept
+      expect(result).toContain('import.meta.hot.accept')
+    })
+
+    it('builder 包装的组件生成正确的注册代码', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        export const App = () => {
+          const name = 'test'
+          return <div>{name}</div>
+        }
+        builder(App)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证注册语句包含组件函数作为第二个参数
+      expect(result).toMatch(
+        /__\$VITARX_HMR\$__\.instance\.register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*App\)/
+      )
+      // 验证没有状态保存代码
+      expect(result).not.toContain('Promise.resolve().then')
+    })
+
+    it('多个 builder 包装组件都支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        export const App = () => <div>A</div>
+        export const Other = () => <span>B</span>
+        builder(App)
+        builder(Other)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证两个组件都被绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(Other')
+      // 验证只有一个 accept 语句
+      const acceptCount = (result.match(/import\.meta\.hot\.accept/g) || []).length
+      expect(acceptCount).toBe(1)
+    })
+
+    it('普通组件和 builder 包装组件混合场景', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        import { ref } from 'vitarx'
+        export const Normal = () => {
+          const count = ref(0)
+          return <div>{count}</div>
+        }
+        export const Wrapped = () => <span>wrapped</span>
+        builder(Wrapped)
+      `
+      const result = await compile(code, hmrOptions)
+      // Normal 组件应该有状态恢复
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+      // Wrapped 组件应该用包装注册方式（两个参数）
+      expect(result).toMatch(/register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*Wrapped\)/)
+      // 两个组件都应该被绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(Normal')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(Wrapped')
+    })
+
+    it('变量声明形式的 builder 包装组件支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        const App = builder(() => <div>test</div>)
+        export default App
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被识别并绑定（内部函数名以 App 为基础）
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证注入了 hot.accept
+      expect(result).toContain('import.meta.hot.accept')
+    })
+
+    it('变量声明 builder 包装组件不注入状态恢复', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        import { ref } from 'vitarx'
+        const App = builder(() => {
+          const count = ref(0)
+          return <div>{count}</div>
+        })
+        export default App
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证不注入 memo 状态恢复
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
+      // 验证不注入状态保存代码
+      expect(result).not.toContain('__$VITARX_HMR_VIEW_STATE$__')
+    })
+
+    it('变量声明 builder 包装组件生成正确的注册代码', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        const App = builder(() => <div>test</div>)
+        export default App
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证 builder 调用中的箭头函数被提取为具名函数
+      expect(result).toMatch(/function App\$\d+\(\)/)
+      // 验证 builder 调用参数被替换为标识符
+      expect(result).toMatch(/builder\(App\$\d+\)/)
+      // 验证使用包装组件的注册方式（传入两个参数）
+      expect(result).toMatch(/register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*App\$\d+\)/)
+    })
+
+    it('命名导出变量声明形式的 builder 包装组件支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        export const App = builder(() => <div>test</div>)
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被识别并绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证使用包装组件的注册方式
+      expect(result).toMatch(/register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*App\$\d+\)/)
+      // 验证不注入状态恢复
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
+    })
+
+    it('export { X } 形式的 builder 包装组件支持 HMR', async () => {
+      const code = `
+        import { builder } from 'vitarx'
+        const App = builder(() => <div>test</div>)
+        export { App }
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证组件被识别并绑定
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
+      // 验证注入了 hot.accept
+      expect(result).toContain('import.meta.hot.accept')
     })
   })
 
