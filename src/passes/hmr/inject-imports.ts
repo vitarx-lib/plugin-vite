@@ -6,7 +6,10 @@
 import * as t from '@babel/types'
 import { HMR } from '../../constants/index.js'
 
-/** getComponentView 的内部别名，避免与用户代码冲突 */
+/** 
+ * getComponentView 的内部别名，使用特殊命名避免与用户代码冲突
+ * 格式：__$VITARX_XXX$__
+ */
 export const GET_COMPONENT_VIEW_ALIAS = '__$VITARX_GET_COMPONENT_VIEW$__'
 
 /**
@@ -14,10 +17,12 @@ export const GET_COMPONENT_VIEW_ALIAS = '__$VITARX_GET_COMPONENT_VIEW$__'
  * @param program - AST Program 节点
  */
 export function injectHMRImport(program: t.Program): void {
+  // 创建 import 语句: import __$VITARX_HMR$__ from '@vitarx/vite-plugin/hmr-client'
   const importDecl = t.importDeclaration(
     [t.importDefaultSpecifier(t.identifier(HMR.manager))],
     t.stringLiteral('@vitarx/vite-plugin/hmr-client')
   )
+  // 将导入语句插入到程序体最前面
   program.body.unshift(importDecl)
 }
 
@@ -27,9 +32,11 @@ export function injectHMRImport(program: t.Program): void {
  * @param program - AST Program 节点
  */
 export function injectGetComponentViewImport(program: t.Program): void {
+  // 创建 import 语句: import { getComponentView as __$VITARX_GET_COMPONENT_VIEW$__ } from 'vitarx'
   const importDecl = t.importDeclaration(
     [t.importSpecifier(t.identifier(GET_COMPONENT_VIEW_ALIAS), t.identifier('getComponentView'))],
     t.stringLiteral('vitarx')
   )
+  // 将导入语句插入到程序体最前面
   program.body.unshift(importDecl)
 }

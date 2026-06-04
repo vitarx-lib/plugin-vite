@@ -1,5 +1,6 @@
 /**
  * JSX 相关工具函数
+ * 提供 JSX 元素的各种操作和判断方法
  * @module utils/jsx-helpers
  */
 import * as t from '@babel/types'
@@ -20,9 +21,12 @@ import { isWhitespaceJSXText } from './ast-guards.js'
 
 /**
  * 获取 JSX 元素的名称
+ * @param node - JSX 元素节点
+ * @returns 元素名称（Identifier）或 null（MemberExpression）
  */
 export function getJSXElementName(node: JSXElement): string | null {
   const nameNode = node.openingElement.name
+  // 只处理简单标识符，MemberExpression 返回 null
   return nameNode.type === 'JSXIdentifier' ? nameNode.name : null
 }
 
@@ -30,15 +34,20 @@ export function getJSXElementName(node: JSXElement): string | null {
  * 将 JSX 元素名称节点转换为 createView 的类型表达式
  * JSXIdentifier → Identifier（组件）或 StringLiteral（原生元素）
  * JSXMemberExpression → MemberExpression（如 Obj.Key → Obj.Key）
+ * @param node - JSX 元素节点
+ * @returns 类型表达式或 null
  */
 export function resolveJSXElementType(node: JSXElement): t.Expression | null {
   const nameNode = node.openingElement.name
 
+  // 处理简单标识符（如 <div> 或 <Component>）
   if (nameNode.type === 'JSXIdentifier') {
     const name = nameNode.name
+    // 原生元素转为字符串，组件转为标识符
     return isNativeElement(name) ? t.stringLiteral(name) : t.identifier(name)
   }
 
+  // 处理成员表达式（如 <Obj.Key>）
   if (nameNode.type === 'JSXMemberExpression') {
     return jsxMemberExprToMemberExpr(nameNode)
   }
@@ -49,8 +58,11 @@ export function resolveJSXElementType(node: JSXElement): t.Expression | null {
 /**
  * 递归转换 JSXMemberExpression 为 MemberExpression
  * Obj.Key → Obj.Key, A.B.C → A.B.C
+ * @param node - JSXMemberExpression 节点
+ * @returns MemberExpression 节点
  */
 function jsxMemberExprToMemberExpr(node: t.JSXMemberExpression): t.MemberExpression {
+  // 递归处理对象部分
   const object =
     node.object.type === 'JSXMemberExpression'
       ? jsxMemberExprToMemberExpr(node.object)
@@ -60,6 +72,9 @@ function jsxMemberExprToMemberExpr(node: t.JSXMemberExpression): t.MemberExpress
 
 /**
  * 判断名称是否为纯编译组件
+ * 纯编译组件在编译时完全展开，不会生成运行时调用
+ * @param name - 元素名称
+ * @returns 是否为纯编译组件
  */
 export function isPureCompileComponent(name: string): boolean {
   return PURE_COMPILE_COMPONENTS.includes(name as any)
@@ -67,6 +82,9 @@ export function isPureCompileComponent(name: string): boolean {
 
 /**
  * 判断名称是否为组件（首字母大写）
+ * 遵循 React/Vue 的组件命名约定
+ * @param name - 元素名称
+ * @returns 是否为组件
  */
 export function isComponent(name: string): boolean {
   return name.length > 0 && name[0] === name[0].toUpperCase()
@@ -74,6 +92,9 @@ export function isComponent(name: string): boolean {
 
 /**
  * 判断名称是否为原生元素
+ * 原生元素使用小写字母开头
+ * @param name - 元素名称
+ * @returns 是否为原生元素
  */
 export function isNativeElement(name: string): boolean {
   return !isComponent(name)
