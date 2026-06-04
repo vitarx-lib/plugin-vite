@@ -76,13 +76,23 @@ function tryAddComponent(
 
 /**
  * 处理变量声明中的组件
- * 提取变量赋值中的箭头函数或函数表达式作为组件
+ * 提取变量赋值中的箭头函数、函数表达式或 builder 包装调用作为组件
+ * @param declaration - 变量声明节点
+ * @param exportedNames - 已导出的名称集合
+ * @param components - 组件信息数组
+ * @param builderWrappedNames - 已被包装器包装的函数名称集合
+ * @param program - AST Program 节点，用于插入提取的函数声明
+ * @param builderAlias - builder 的本地别名
+ * @param allBindingNames - 所有绑定名称集合（用于生成唯一名称时避免冲突）
  */
 function processVariableDeclaration(
   declaration: t.VariableDeclaration,
   exportedNames: Set<string>,
   components: ComponentInfo[],
-  builderWrappedNames: Set<string> = new Set()
+  builderWrappedNames: Set<string> = new Set(),
+  program?: t.Program,
+  builderAlias?: string | null,
+  allBindingNames?: Set<string>
 ): void {
   // 遍历变量声明中的每个声明
   for (const decl of declaration.declarations) {
@@ -90,9 +100,43 @@ function processVariableDeclaration(
     if (decl.id.type !== 'Identifier') continue
 
     const init = decl.init
-    // 检查初始值是否为箭头函数或函数表达式
     if (init?.type === 'ArrowFunctionExpression' || init?.type === 'FunctionExpression') {
+      // 检查初始值是否为箭头函数或函数表达式
       tryAddComponent(decl.id.name, init, exportedNames, components, builderWrappedNames)
+    } else if (
+      init?.type === 'CallExpression' &&
+      program &&
+      builderAlias != null &&
+      allBindingNames
+    ) {
+      // 处理 builder 包装的变量声明：const App = builder(() => <div/>)
+      // 仅处理已导出且名称合法的变量
+      if (!isValidComponentName(decl.id.name) || !exportedNames.has(decl.id.name)) continue
+
+      const result = extractFunctionFromVariableInit(
+        init,
+        decl.id.name,
+        allBindingNames,
+        builderAlias
+      )
+      if (result) {
+        // 找到包含该变量声明的语句在 program.body 中的位置
+        const stmtIndex = program.body.findIndex(stmt => {
+          if (stmt === declaration) return true
+          // 变量声明可能在 ExportNamedDeclaration 内部
+          return stmt.type === 'ExportNamedDeclaration' && stmt.declaration === declaration
+        })
+        // 将提取的函数声明插入到变量声明之前
+        if (stmtIndex !== -1) {
+          program.body.splice(stmtIndex, 0, result.funcNode)
+        }
+        // 直接添加为包装组件（不经过 tryAddComponent，因为内部函数名不在 exportedNames 中）
+        components.push({
+          name: result.name,
+          node: result.funcNode,
+          isWrapped: result.isBuilderWrapped
+        })
+      }
     }
   }
 }
@@ -150,6 +194,45 @@ function extractFunctionFromCallExpression(
     if (arg.type === 'ArrowFunctionExpression' || arg.type === 'FunctionExpression') {
       // 生成唯一名称
       const name = generateUniqueDefaultName(exportedNames)
+      // 转换为命名函数声明
+      const funcNode = convertToNamedFunctionDeclaration(arg, name)
+      // 将原参数替换为标识符引用
+      callExpr.arguments[i] = t.identifier(name)
+      return { name, funcNode, isBuilderWrapped: isBuilder }
+    }
+  }
+  // 未找到可提取的函数参数
+  return null
+}
+
+/**
+ * 从变量声明的调用表达式中提取函数
+ * 将 const App = builder(() => <div/>) 转换为：
+ * function App$1() { return <div/> }
+ * const App = builder(App$1)
+ * @param callExpr - 调用表达式
+ * @param variableName - 变量名（作为内部函数名的基础）
+ * @param allBindingNames - 所有绑定名称集合（用于避免命名冲突）
+ * @param builderAlias - builder 的本地别名
+ * @returns 提取结果，包含名称、函数声明节点和是否是 builder 包装
+ */
+function extractFunctionFromVariableInit(
+  callExpr: t.CallExpression,
+  variableName: string,
+  allBindingNames: Set<string>,
+  builderAlias: string | null
+): { name: string; funcNode: t.FunctionDeclaration; isBuilderWrapped: boolean } | null {
+  // 判断是否为 builder 函数调用
+  const isBuilder = isBuilderCall(callExpr, builderAlias)
+  // 遍历调用表达式的所有参数
+  for (let i = 0; i < callExpr.arguments.length; i++) {
+    const arg = callExpr.arguments[i]
+    // 找到作为参数传入的匿名函数
+    if (arg.type === 'ArrowFunctionExpression' || arg.type === 'FunctionExpression') {
+      // 以变量名为基础生成唯一别名，避免与已有名称冲突
+      const name = generateUniqueAlias(variableName, allBindingNames)
+      // 将新名称加入集合，防止后续生成重复名称
+      allBindingNames.add(name)
       // 转换为命名函数声明
       const funcNode = convertToNamedFunctionDeclaration(arg, name)
       // 将原参数替换为标识符引用
@@ -220,6 +303,41 @@ function processAnonymousDefaultExport(
 }
 
 /**
+ * 在 program.body 中查找指定名称的变量声明
+ * 用于处理 export default X 场景，追溯标识符对应的变量声明
+ * @param program - AST Program 节点
+ * @param name - 要查找的变量名
+ * @returns 包含变量声明和所在语句的对象，未找到返回 null
+ */
+function findVariableDeclaration(
+  program: t.Program,
+  name: string
+): { decl: t.VariableDeclarator; statement: t.Statement } | null {
+  for (const stmt of program.body) {
+    // 查找普通变量声明
+    if (stmt.type === 'VariableDeclaration') {
+      for (const decl of stmt.declarations) {
+        if (decl.id.type === 'Identifier' && decl.id.name === name) {
+          return { decl, statement: stmt }
+        }
+      }
+    }
+    // 查找命名导出中的变量声明
+    if (
+      stmt.type === 'ExportNamedDeclaration' &&
+      stmt.declaration?.type === 'VariableDeclaration'
+    ) {
+      for (const decl of stmt.declaration.declarations) {
+        if (decl.id.type === 'Identifier' && decl.id.name === name) {
+          return { decl, statement: stmt }
+        }
+      }
+    }
+  }
+  return null
+}
+
+/**
  * 收集模块中的组件函数
  * 遍历 AST 程序节点，提取所有导出的组件函数
  * @param program - AST Program 节点
@@ -245,8 +363,16 @@ export function collectComponentFunctions(
     if (node.type === 'FunctionDeclaration' && node.id) {
       tryAddComponent(node.id.name, node, exportedNames, components, builderWrappedNames)
     } else if (node.type === 'VariableDeclaration') {
-      // 处理变量声明 const Component = () => {}
-      processVariableDeclaration(node, exportedNames, components, builderWrappedNames)
+      // 处理变量声明 const Component = () => {} 或 const App = builder(() => {})
+      processVariableDeclaration(
+        node,
+        exportedNames,
+        components,
+        builderWrappedNames,
+        program,
+        builderAlias,
+        allBindingNames
+      )
     } else if (node.type === 'ExportNamedDeclaration' && node.declaration) {
       // 处理命名导出 export function Component() {} 或 export const Component = () => {}
       if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
@@ -258,13 +384,49 @@ export function collectComponentFunctions(
           builderWrappedNames
         )
       } else if (node.declaration.type === 'VariableDeclaration') {
-        processVariableDeclaration(node.declaration, exportedNames, components, builderWrappedNames)
+        // 处理变量声明 const Component = () => {} 或 const App = builder(() => {})
+        processVariableDeclaration(
+          node.declaration,
+          exportedNames,
+          components,
+          builderWrappedNames,
+          program,
+          builderAlias,
+          allBindingNames
+        )
       }
     } else if (node.type === 'ExportDefaultDeclaration') {
       // 处理默认导出 export default Component 或 export default () => {}
       const decl = node.declaration
       if (decl.type === 'FunctionDeclaration' && decl.id) {
+        // 处理具名函数默认导出 export default function Component() {}
         tryAddComponent(decl.id.name, decl, exportedNames, components, builderWrappedNames)
+      } else if (decl.type === 'Identifier') {
+        // 处理标识符默认导出 export default X
+        // 追溯标识符对应的变量声明，判断是否为 builder 包装组件
+        if (isValidComponentName(decl.name) && exportedNames.has(decl.name)) {
+          const varDecl = findVariableDeclaration(program, decl.name)
+          if (varDecl?.decl.init?.type === 'CallExpression') {
+            const result = extractFunctionFromVariableInit(
+              varDecl.decl.init,
+              decl.name,
+              allBindingNames,
+              builderAlias
+            )
+            if (result) {
+              // 将提取的函数声明插入到变量声明所在语句之前
+              const stmtIndex = program.body.indexOf(varDecl.statement)
+              if (stmtIndex !== -1) {
+                program.body.splice(stmtIndex, 0, result.funcNode)
+              }
+              components.push({
+                name: result.name,
+                node: result.funcNode,
+                isWrapped: result.isBuilderWrapped
+              })
+            }
+          }
+        }
       } else {
         // 处理匿名默认导出
         processAnonymousDefaultExport(node, program, allBindingNames, components, builderAlias)
