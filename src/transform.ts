@@ -8,7 +8,6 @@ import { parse, type ParserOptions } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
 import { createContext, type TransformContext } from './context.js'
-import type { CompileOptions } from './types.js'
 import {
   collectExistingImports,
   collectLocalBindings,
@@ -23,6 +22,7 @@ import {
   processVIfChain,
   transformJSXElement
 } from './passes/index.js'
+import type { CompileOptions } from './types.js'
 import {
   collectComponentFunctions,
   generateUniqueAlias,
@@ -31,7 +31,7 @@ import {
 } from './utils/index.js'
 
 export interface TransformResult extends GeneratorResult {}
-
+const entryPatterns = [/\/src\/main\.(tsx|jsx)$/, /\\src\\main\.(tsx|jsx)$/]
 /**
  * 创建解析器选项
  */
@@ -163,6 +163,16 @@ export function shouldTransform(id: string): boolean {
   const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
   return ext === 'jsx' || ext === 'tsx'
 }
+
+/**
+ * 检查是否为入口文件
+ * 入口文件（如 src/main.tsx/src/main.jsx）不应注入 HMR，因为主脚本重新执行会导致页面内容重复
+ * 最佳实践：入口文件应为 main.ts/main.js，组件应放在 App.tsx/App.jsx 等专门的组件文件中
+ */
+function isEntryFile(id: string): boolean {
+  const normalizedId = id.split('?')[0]
+  return entryPatterns.some(pattern => pattern.test(normalizedId))
+}
 /**
  * 转换 JSX/TSX 代码
  */
@@ -184,7 +194,7 @@ export async function transform(
 
   injectImports(ast.program, ctx)
 
-  if (options.hmr && components.length > 0) {
+  if (options.hmr && components.length > 0 && !isEntryFile(id)) {
     injectHMRSupport(ast.program, components, id)
   }
 
