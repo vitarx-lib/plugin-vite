@@ -1,9 +1,17 @@
-## [1.0.1](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0...v1.0.1) (2026-06-03)
+## [1.0.2-alpha.0](https://gitee.com/vitarx/plugin-vite/compare/v1.0.1...v1.0.2-alpha.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* **transform:** 修复入口文件避免注入 HMR ([dea6cd3](https://gitee.com/vitarx/plugin-vite/commits/dea6cd3567123de8a1b1ef85969a2a05c5691785))
 
 
 ### Features
 
 * **plugin:** 改进 SSR 判断 ([af410e3](https://gitee.com/vitarx/plugin-vite/commits/af410e333bb4ab635d634b18aa52113fb39f2681))
+* **utils:** 支持从 builder 包装调用中提取组件函数 ([a969ece](https://gitee.com/vitarx/plugin-vite/commits/a969ece1094f2cf483e3461e4a6b4591c41d1031))
+
+# [1.0.0](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.8...v1.0.0) (2026-05-27)
 
 # [1.0.0-beta.8](https://gitee.com/vitarx/plugin-vite/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2026-05-22)
 
