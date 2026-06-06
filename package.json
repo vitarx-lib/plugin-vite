@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://gitee.com/vitarx/plugin-vite.git"
+    "url": "git+https://github.com/vitarx-lib/plugin-vite.git"
   },
   "type": "module",
   "module": "dist/index.js",
