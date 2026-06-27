@@ -1,4 +1,11 @@
-## [1.0.2](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.2-alpha.0...v1.0.2) (2026-06-06)
+## [1.0.3](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.2...v1.0.3) (2026-06-27)
+
+
+### Bug Fixes
+
+* **jsx:** 处理包含插值的模板字面量以启用响应式追踪 ([dcc094b](https://github.com/vitarx-lib/plugin-vite/commit/dcc094b9fe8c2f5550841f65fa842407cc3a5425))
+
+## [1.0.2-alpha.0](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.1...v1.0.2-alpha.0) (2026-06-04)
 
 
 ### Bug Fixes
@@ -172,4 +179,3 @@
 ### Features
 
 * 独立发布vite-plugin-vitarx插件 ([9ea224b](https://github.com/vitarx-lib/plugin-vite/commit/9ea224bed92781e0282958ffd51ec790accc95c6))
-
