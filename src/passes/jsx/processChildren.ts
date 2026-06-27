@@ -143,6 +143,17 @@ function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Ex
     return wrapWithExpr(expr, ctx)
   }
 
+  // 包含插值表达式的模板字面量是动态的，需要用 expr 包装以启用响应式追踪
+  // 纯静态模板字符串转为 StringLiteral 直接返回
+  if (t.isTemplateLiteral(expr)) {
+    if (expr.expressions.length > 0) {
+      return wrapWithExpr(expr, ctx)
+    }
+    // 无插值的模板字面量等价于静态字符串
+    const raw = expr.quasis.map(q => q.value.cooked).join('')
+    return t.stringLiteral(raw)
+  }
+
   // 其他类型的表达式直接返回，无需特殊处理
   return expr
 }
