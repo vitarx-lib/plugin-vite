@@ -323,9 +323,9 @@ describe('边界情况', () => {
     const code = 'const App = () => <div>{`hello ${name}`}</div>'
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: \`hello \${name}\`
+        children: /* @__PURE__ */expr(() => \`hello \${name}\`)
       });"
     `)
   })
