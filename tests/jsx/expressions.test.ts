@@ -263,3 +263,60 @@ describe('复杂表达式边界情况', () => {
     `)
   })
 })
+
+describe('模板字面量表达式', () => {
+  it('动态模板字面量作为子元素应包装为 expr', async () => {
+    const code = `const App = () => <div>{\`hello \${name}\`}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => \`hello \${name}\`)
+      });"
+    `)
+  })
+
+  it('静态模板字面量作为子元素应转为 StringLiteral', async () => {
+    const code = 'const App = () => <div>{`hello world`}</div>'
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: "hello world"
+      });"
+    `)
+  })
+
+  it('条件分支中的动态模板字面量应包装为 expr', async () => {
+    const code = 'const App = () => <div>{t.value ? `${show.value}动态` : "静态"}</div>'
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, branch, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */branch(() => t.value ? 0 : 1, [() => /* @__PURE__ */expr(() => \`\${show.value}动态\`), () => "静态"])
+      });"
+    `)
+  })
+
+  it('条件两个分支均为动态模板字面量', async () => {
+    const code = 'const App = () => <div>{flag ? `${a.value}A` : `${b.value}B`}</div>'
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, branch, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */branch(() => unref(flag) ? 0 : 1, [() => /* @__PURE__ */expr(() => \`\${a.value}A\`), () => /* @__PURE__ */expr(() => \`\${b.value}B\`)])
+      });"
+    `)
+  })
+
+  it('逻辑表达式中包含动态模板字面量', async () => {
+    const code = 'const App = () => <div>{flag && `${count.value} items`}</div>'
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => flag && \`\${count.value} items\`)
+      });"
+    `)
+  })
+})
