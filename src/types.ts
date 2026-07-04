@@ -57,7 +57,7 @@ declare global {
        *
        * ```tsx
        * const show = ref(true)
-       * // v-if指令不支持 ref 自动解包，必须使用.value
+       * // v-if 指令支持 ref 自动解包，ref.value 是可选的
        * <div v-if={show.value}></div>
        * ```
        */
