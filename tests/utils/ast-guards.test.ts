@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { jsxText } from '@babel/types'
-import { isWhitespaceJSXText } from '../../src/utils/ast-guards.js'
+import {
+  identifier,
+  jsxEmptyExpression,
+  jsxExpressionContainer,
+  jsxText
+} from '@babel/types'
+import { isJSXComment, isWhitespaceJSXText } from '../../src/utils/ast-guards.js'
 
 describe('ast-guards', () => {
   describe('isWhitespaceJSXText', () => {
@@ -32,6 +37,28 @@ describe('ast-guards', () => {
     it('非 JSXText 节点返回 false', () => {
       const node = { type: 'Identifier', name: 'test' }
       expect(isWhitespaceJSXText(node as any)).toBe(false)
+    })
+  })
+
+  describe('isJSXComment', () => {
+    it('JSX 注释节点（JSXEmptyExpression）返回 true', () => {
+      const node = jsxExpressionContainer(jsxEmptyExpression())
+      expect(isJSXComment(node)).toBe(true)
+    })
+
+    it('包含表达式的 JSXExpressionContainer 返回 false', () => {
+      const node = jsxExpressionContainer(identifier('foo'))
+      expect(isJSXComment(node)).toBe(false)
+    })
+
+    it('JSXText 节点返回 false', () => {
+      const node = jsxText('hello')
+      expect(isJSXComment(node)).toBe(false)
+    })
+
+    it('非 JSX 节点返回 false', () => {
+      const node = { type: 'Identifier', name: 'test' }
+      expect(isJSXComment(node as any)).toBe(false)
     })
   })
 })

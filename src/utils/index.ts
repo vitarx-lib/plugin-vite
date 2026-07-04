@@ -1,5 +1,5 @@
 // 类型守卫
-export { isWhitespaceJSXText } from './ast-guards.js'
+export { isWhitespaceJSXText, isJSXComment } from './ast-guards.js'
 
 // JSX 辅助函数
 export {

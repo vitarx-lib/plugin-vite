@@ -6,7 +6,7 @@
 import * as t from '@babel/types'
 import { isJSXElement, isJSXText } from '@babel/types'
 import { createError } from '../error.js'
-import { isWhitespaceJSXText } from './ast-guards.js'
+import { isJSXComment, isWhitespaceJSXText } from './ast-guards.js'
 import {
   getDirectiveValue,
   hasDirective,
@@ -182,6 +182,12 @@ function collectSingleChainFromFragment(
 
     // 跳过空白文本节点（允许链元素间有空白）
     if (isJSXText(nextChild) && isWhitespaceJSXText(nextChild)) {
+      j++
+      continue
+    }
+
+    // 跳过 JSX 注释节点（允许链元素间有注释，如 {/* comment *\/}）
+    if (isJSXComment(nextChild)) {
       j++
       continue
     }

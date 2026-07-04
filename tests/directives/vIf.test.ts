@@ -31,6 +31,48 @@ describe('v-if 连续链', () => {
     `)
   })
 
+  it('v-if + v-else 之间存在 JSX 注释时正常生成 branch', async () => {
+    const code = `const App = () => <>
+      <div v-if={show}>visible</div>
+      {/* 这是一个注释 */}
+      <span v-else>hidden</span>
+    </>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, Fragment, branch } from "vitarx";
+      const App = () => /* @__PURE__ */createView(Fragment, {
+        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
+          children: "visible"
+        }), () => /* @__PURE__ */createView("span", {
+          children: "hidden"
+        })])
+      });"
+    `)
+  })
+
+  it('v-if 链各分支之间存在 JSX 注释时正常生成 branch', async () => {
+    const code = `const App = () => <>
+      <div v-if={a}>A</div>
+      {/* if 分支 */}
+      <span v-else-if={b}>B</span>
+      {/* else-if 分支 */}
+      <p v-else>C</p>
+    </>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, Fragment, branch } from "vitarx";
+      const App = () => /* @__PURE__ */createView(Fragment, {
+        children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
+          children: "A"
+        }), () => /* @__PURE__ */createView("span", {
+          children: "B"
+        }), () => /* @__PURE__ */createView("p", {
+          children: "C"
+        })])
+      });"
+    `)
+  })
+
   it('v-if + v-else 在普通元素中生成 branch', async () => {
     const code = `const App = () => <div>
       <div v-if={show}>visible</div>

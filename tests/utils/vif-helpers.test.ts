@@ -3,10 +3,12 @@ import {
   jsxAttribute,
   jsxClosingElement,
   jsxElement,
+  jsxEmptyExpression,
   jsxExpressionContainer,
   jsxIdentifier,
   jsxOpeningElement,
-  jsxText
+  jsxText,
+  type JSXExpressionContainer
 } from '@babel/types'
 import { describe, expect, it } from 'vitest'
 import {
@@ -42,6 +44,14 @@ function createVElseIfElement(condition?: any): any {
 function createVElseElement(): any {
   const attr = jsxAttribute(jsxIdentifier('v-else'))
   return createJSXElement('div', [attr])
+}
+
+/**
+ * 创建 JSX 注释节点 {/* comment *\/}
+ * JSX 注释会被解析为 JSXExpressionContainer，其 expression 为 JSXEmptyExpression
+ */
+function createJSXComment(): JSXExpressionContainer {
+  return jsxExpressionContainer(jsxEmptyExpression())
 }
 
 describe('vif-helpers', () => {
@@ -150,6 +160,45 @@ describe('vif-helpers', () => {
 
     it('跳过空白文本节点', () => {
       const children = [createVIfElement(identifier('a')), jsxText('\n  '), createVElseElement()]
+      const chains = collectFragmentVIfChains(children)
+      expect(chains.length).toBe(1)
+      expect(chains[0].conditions.length).toBe(2)
+    })
+
+    it('v-if 与 v-else 之间存在 JSX 注释时不应中断链', () => {
+      const children = [
+        createVIfElement(identifier('a')),
+        createJSXComment(),
+        createVElseElement()
+      ]
+      const chains = collectFragmentVIfChains(children)
+      expect(chains.length).toBe(1)
+      expect(chains[0].conditions.length).toBe(2)
+      expect(chains[0].nodes.length).toBe(2)
+    })
+
+    it('v-if 与 v-else-if 之间存在 JSX 注释时不应中断链', () => {
+      const children = [
+        createVIfElement(identifier('a')),
+        createJSXComment(),
+        createVElseIfElement(identifier('b')),
+        createJSXComment(),
+        createVElseElement()
+      ]
+      const chains = collectFragmentVIfChains(children)
+      expect(chains.length).toBe(1)
+      expect(chains[0].conditions.length).toBe(3)
+      expect(chains[0].nodes.length).toBe(3)
+    })
+
+    it('JSX 注释与空白文本混合时不中断链', () => {
+      const children = [
+        createVIfElement(identifier('a')),
+        jsxText('\n  '),
+        createJSXComment(),
+        jsxText('\n  '),
+        createVElseElement()
+      ]
       const chains = collectFragmentVIfChains(children)
       expect(chains.length).toBe(1)
       expect(chains[0].conditions.length).toBe(2)
