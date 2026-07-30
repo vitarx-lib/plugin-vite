@@ -146,7 +146,7 @@ describe('branch-factory', () => {
       expect(ctx.imports.branch).toBe(true)
     })
 
-    it('标识符条件标记 unref 导入', () => {
+    it('已知 ref 标识符条件使用 .value 不标记 unref 导入', () => {
       const ctx = createMockContext()
       ctx.refVariables.add('show')
       const config = {
@@ -154,17 +154,19 @@ describe('branch-factory', () => {
         branches: [arrowFunctionExpression([], identifier('a'))]
       }
       createBranch(config, ctx)
-      expect(ctx.imports.unref).toBe(true)
+      // 已知 ref 使用 .value，不需要导入 unref
+      expect(ctx.imports.unref).toBe(false)
     })
 
-    it('非 ref 标识符条件不标记 unref 导入', () => {
+    it('未知标识符条件标记 unref 导入', () => {
       const ctx = createMockContext()
       const config = {
         conditions: [identifier('show')],
         branches: [arrowFunctionExpression([], identifier('a'))]
       }
       createBranch(config, ctx)
-      expect(ctx.imports.unref).toBe(false)
+      // 未知标识符使用 unref()，需要导入 unref
+      expect(ctx.imports.unref).toBe(true)
     })
 
     it('非标识符条件不标记 unref 导入', () => {
@@ -207,7 +209,8 @@ describe('branch-factory', () => {
       const call = createBinaryBranch(identifier('show'), identifier('a'), identifier('b'), ctx)
       expect(call.type).toBe('CallExpression')
       expect(ctx.imports.branch).toBe(true)
-      expect(ctx.imports.unref).toBe(true)
+      // 三元表达式 useRef=false，不使用 unref
+      expect(ctx.imports.unref).toBe(false)
     })
 
     it('非标识符条件不标记 unref', () => {
