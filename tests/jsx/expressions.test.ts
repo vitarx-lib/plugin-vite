@@ -8,9 +8,9 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => show ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "yes"
-        }), () => /* @__PURE__ */branch(() => unref(show2) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        }), () => /* @__PURE__ */branch(() => show2 ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "maybe"
         }), () => /* @__PURE__ */createView("span", {
           children: "no"
@@ -25,7 +25,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => 'A', () => /* @__PURE__ */branch(() => unref(b) ? 0 : 1, [() => 'B', () => /* @__PURE__ */branch(() => unref(c) ? 0 : 1, [() => 'C', () => 'D'])])])
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => 'A', () => /* @__PURE__ */branch(() => b ? 0 : 1, [() => 'B', () => /* @__PURE__ */branch(() => c ? 0 : 1, [() => 'C', () => 'D'])])])
       });"
     `)
   })
@@ -36,7 +36,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */branch(() => unref(b) ? 0 : 1, [() => 'AB', () => 'A']), () => 'other'])
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */branch(() => b ? 0 : 1, [() => 'AB', () => 'A']), () => 'other'])
       });"
     `)
   })
@@ -47,9 +47,9 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "A"
-        }), () => /* @__PURE__ */branch(() => unref(b) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        }), () => /* @__PURE__ */branch(() => b ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "B"
         }), () => /* @__PURE__ */createView("span", {
           children: "C"
@@ -64,7 +64,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "A"
         }), () => /* @__PURE__ */expr(() => b || c)])
       });"
@@ -77,7 +77,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */expr(() => b && c), () => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */expr(() => b && c), () => /* @__PURE__ */createView("span", {
           children: "other"
         })])
       });"
@@ -90,7 +90,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "A"
         }), () => /* @__PURE__ */expr(() => createContent())])
       });"
@@ -103,7 +103,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */expr(() => createContent()), () => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */expr(() => createContent()), () => /* @__PURE__ */createView("span", {
           children: "B"
         })])
       });"
@@ -116,7 +116,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */expr(() => renderA()), () => /* @__PURE__ */expr(() => renderB())])
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => /* @__PURE__ */expr(() => renderA()), () => /* @__PURE__ */expr(() => renderB())])
       });"
     `)
   })
@@ -127,7 +127,7 @@ describe('嵌套三元表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => accessor(props, "content"), () => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => a ? 0 : 1, [() => accessor(props, "content"), () => /* @__PURE__ */createView("span", {
           children: "default"
         })])
       });"
@@ -186,7 +186,7 @@ describe('复杂表达式边界情况', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: ["Status: ", /* @__PURE__ */branch(() => unref(active) ? 0 : 1, [() => 'on', () => 'off'])]
+        children: ["Status: ", /* @__PURE__ */branch(() => active ? 0 : 1, [() => 'on', () => 'off'])]
       });"
     `)
   })
@@ -197,7 +197,7 @@ describe('复杂表达式边界情况', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: [/* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => 'A', () => 'a']), " - ", /* @__PURE__ */branch(() => unref(b) ? 0 : 1, [() => 'B', () => 'b'])]
+        children: [/* @__PURE__ */branch(() => a ? 0 : 1, [() => 'A', () => 'a']), " - ", /* @__PURE__ */branch(() => b ? 0 : 1, [() => 'B', () => 'b'])]
       });"
     `)
   })
@@ -304,7 +304,7 @@ describe('模板字面量表达式', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, expr } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(flag) ? 0 : 1, [() => /* @__PURE__ */expr(() => \`\${a.value}A\`), () => /* @__PURE__ */expr(() => \`\${b.value}B\`)])
+        children: /* @__PURE__ */branch(() => flag ? 0 : 1, [() => /* @__PURE__ */expr(() => \`\${a.value}A\`), () => /* @__PURE__ */expr(() => \`\${b.value}B\`)])
       });"
     `)
   })
