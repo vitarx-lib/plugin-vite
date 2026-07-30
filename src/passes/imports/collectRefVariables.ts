@@ -95,6 +95,19 @@ function collectRefVariablesFromNode(
       if (decl.id.type === 'VoidPattern') continue
 
       const init = decl.init
+
+      // 如果 init 是箭头函数或函数表达式，递归处理其函数体内的 ref 声明
+      // 确保组件函数（如 const App = () => { const count = ref(0) }）内的 ref 被正确收集
+      if (
+        (init.type === 'ArrowFunctionExpression' || init.type === 'FunctionExpression') &&
+        init.body.type === 'BlockStatement'
+      ) {
+        for (const stmt of init.body.body) {
+          collectRefVariablesFromNode(stmt, refVariables, refApiLocalNames, toRefsLocalNames)
+        }
+        continue
+      }
+
       // 检查是否为函数调用表达式
       if (init.type !== 'CallExpression' || init.callee.type !== 'Identifier') {
         continue
@@ -119,9 +132,16 @@ function collectRefVariablesFromNode(
     // 处理命名导出的声明
     collectRefVariablesFromNode(node.declaration, refVariables, refApiLocalNames, toRefsLocalNames)
   } else if (node.type === 'ExportDefaultDeclaration') {
-    // 处理默认导出
+    // 处理默认导出（支持函数声明、箭头函数、函数表达式）
     const decl = node.declaration
     if (decl.type === 'FunctionDeclaration' && decl.body) {
+      for (const stmt of decl.body.body) {
+        collectRefVariablesFromNode(stmt, refVariables, refApiLocalNames, toRefsLocalNames)
+      }
+    } else if (
+      (decl.type === 'ArrowFunctionExpression' || decl.type === 'FunctionExpression') &&
+      decl.body.type === 'BlockStatement'
+    ) {
       for (const stmt of decl.body.body) {
         collectRefVariablesFromNode(stmt, refVariables, refApiLocalNames, toRefsLocalNames)
       }
@@ -165,14 +185,21 @@ function collectNonRefFromNode(node: t.Node, nonRefVariables: Set<string>): void
     // 变量声明：只有箭头函数或函数表达式才是非 ref
     for (const decl of node.declarations) {
       if (!decl.init) continue
-      // 只处理简单标识符（不处理解构）
-      if (decl.id.type !== 'Identifier') continue
       const init = decl.init
       if (
         init.type === 'ArrowFunctionExpression' ||
         init.type === 'FunctionExpression'
       ) {
-        nonRefVariables.add(decl.id.name)
+        // 只处理简单标识符（不处理解构）
+        if (decl.id.type === 'Identifier') {
+          nonRefVariables.add(decl.id.name)
+        }
+        // 递归处理函数体内的变量声明，收集内部非 ref 变量
+        if (init.body.type === 'BlockStatement') {
+          for (const stmt of init.body.body) {
+            collectNonRefFromNode(stmt, nonRefVariables)
+          }
+        }
       }
     }
   } else if (node.type === 'ExportNamedDeclaration') {
