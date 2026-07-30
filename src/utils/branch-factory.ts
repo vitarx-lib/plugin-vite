@@ -37,9 +37,7 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const { conditions, branches, useRef = true } = config
 
   markImport(ctx, 'branch')
-  if (useRef && conditions.some(c => isIdentifier(c) && ctx.refVariables.has(c.name))) {
-    markImport(ctx, 'unref')
-  }
+  // unref 导入标记由 buildNestedCondition 内部统一管理
 
   const conditionExpr = buildNestedCondition(conditions, ctx, useRef)
   const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
@@ -99,9 +97,22 @@ export function buildNestedCondition(
       continue
     }
 
-    // 构建条件表达式
-    const conditionExpr =
-      useRef && isIdentifier(condition) ? createUnrefCall(condition, unrefAlias) : condition
+    // 构建条件表达式：对标识符进行两态解包
+    // 已知 ref → .value（高效，无需导入），否则 → unref()（安全，标记导入）
+    let conditionExpr: t.Expression
+    if (useRef && isIdentifier(condition)) {
+      if (ctx.refVariables.has(condition.name)) {
+        // 已知 ref：直接使用 .value
+        conditionExpr = t.memberExpression(condition, t.identifier('value'))
+      } else {
+        // 非已知 ref：使用 unref() 解包（非 ref 原样返回）
+        markImport(ctx, 'unref')
+        conditionExpr = createUnrefCall(condition, unrefAlias)
+      }
+    } else {
+      // 复杂表达式：原样不解包，用户手动写 .value
+      conditionExpr = condition
+    }
 
     // 对复杂条件表达式添加括号
     const wrappedCondition = wrapExpression(conditionExpr)
@@ -135,6 +146,8 @@ export function createBinaryBranch(
   const conditions = [condition, t.booleanLiteral(true)]
   const branches = [createArrowFunction(consequent), createArrowFunction(alternate)]
 
-  const useRef = isIdentifier(condition)
+  // 三元表达式不解包 ref，用户需手动写 .value
+  // 这样 TypeScript 类型推导能正确检查 Ref<T> 参与运算的类型错误
+  const useRef = false
   return createBranch({ conditions, branches, useRef }, ctx)
 }
