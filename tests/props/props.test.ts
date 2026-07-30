@@ -336,10 +336,12 @@ describe('nonRef 优化', () => {
     const code = `function handleClick() {} const App = () => <div onClick={handleClick}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref } from "vitarx";
       function handleClick() {}
       const App = () => /* @__PURE__ */createView("div", {
-        "onClick": handleClick
+        get "onClick"() {
+          return unref(handleClick);
+        }
       });"
     `)
   })
@@ -348,10 +350,12 @@ describe('nonRef 优化', () => {
     const code = `const fn = () => {}; const App = () => <div onClick={fn}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref } from "vitarx";
       const fn = () => {};
       const App = () => /* @__PURE__ */createView("div", {
-        "onClick": fn
+        get "onClick"() {
+          return unref(fn);
+        }
       });"
     `)
   })
@@ -360,10 +364,12 @@ describe('nonRef 优化', () => {
     const code = `const fn = function() {}; const App = () => <div onClick={fn}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref } from "vitarx";
       const fn = function () {};
       const App = () => /* @__PURE__ */createView("div", {
-        "onClick": fn
+        get "onClick"() {
+          return unref(fn);
+        }
       });"
     `)
   })
@@ -372,10 +378,12 @@ describe('nonRef 优化', () => {
     const code = `export function handleClick() {} const App = () => <div onClick={handleClick}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref } from "vitarx";
       export function handleClick() {}
       const App = () => /* @__PURE__ */createView("div", {
-        "onClick": handleClick
+        get "onClick"() {
+          return unref(handleClick);
+        }
       });"
     `)
   })
