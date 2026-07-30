@@ -107,6 +107,9 @@ export function getAttributeValue(value: t.JSXAttribute['value']): t.Expression 
  *
  * 特殊处理：
  * - children 属性不使用 unref，因为 ref 作为 children 是合法的可变渲染源
+ * - ref 属性不使用 unref/.value，因为 ref 绑定需要 ref 对象本身
+ *   运行时 resolveProps() 通过 isRef() 判定 ref 属性值，若此处解包，
+ *   popProperty 取到的是解包后的值（如 null），isRef 判定失败导致绑定失效
  * - 其他标识符属性使用 unref 解包
  *
  * @param key - 属性名
@@ -130,8 +133,11 @@ export function createProperty(
 
   // 如果是标识符（变量名）
   if (t.isIdentifier(value)) {
-    // 特殊处理 children 属性或不在 refVariables 中的变量
-    if (key === 'children' || ctx.nonRefVariables.has(value.name)) {
+    // 特殊处理 children 和 ref 属性：
+    // - children: ref 作为 children 是合法的可变渲染源，需保持引用本身
+    // - ref: ref 绑定需要 ref 对象本身，运行时通过 isRef() 判定后赋值 .value
+    //   若此处 unref/.value 解包，popProperty 取到解包值（如 null），isRef 失败
+    if (key === 'children' || key === 'ref') {
       return t.objectProperty(keyNode, value)
     }
     // 如果是 ref 变量，创建 getter 方法返回 ref 的 value
@@ -141,7 +147,7 @@ export function createProperty(
         t.returnStatement(t.memberExpression(value, t.identifier('value')))
       )
     }
-    // 其他标识符属性创建 unref getter
+    // 其他标识符属性创建 unref getter（非 ref 原样返回，安全）
     return createUnrefGetter(keyNode, value, ctx)
   }
 
