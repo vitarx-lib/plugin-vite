@@ -64,18 +64,30 @@ function buildDirectiveValue(
 
   // 添加 value 属性
   if (isIdentifier(value)) {
-    // 如果值是一个标识符
-    markImport(ctx, 'unref') // 标记需要导入unref函数
-    const unrefAlias = getAlias(ctx.vitarxAliases, 'unref') // 获取unref函数的别名
-    properties.push(
-      // 添加一个getter方法作为属性
-      t.objectMethod(
-        'get', // 方法类型为getter
-        t.identifier('value'), // 属性名为value
-        [], // 无参数
-        t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))]) // 返回unref(value)
+    // 如果值是一个标识符：已知 ref 用 .value，否则用 unref()
+    if (ctx.refVariables.has(value.name)) {
+      // 已知 ref：直接使用 .value
+      properties.push(
+        t.objectMethod(
+          'get',
+          t.identifier('value'),
+          [],
+          t.blockStatement([t.returnStatement(t.memberExpression(value, t.identifier('value')))])
+        )
       )
-    )
+    } else {
+      // 非已知 ref：使用 unref() 解包（非 ref 原样返回）
+      markImport(ctx, 'unref')
+      const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
+      properties.push(
+        t.objectMethod(
+          'get',
+          t.identifier('value'),
+          [],
+          t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))])
+        )
+      )
+    }
   } else {
     // 如果值不是标识符
     properties.push(
