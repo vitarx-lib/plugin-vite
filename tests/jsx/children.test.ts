@@ -30,7 +30,7 @@ describe('Children 处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(cond) ? 0 : 1, [() => 'yes', () => 'no'])
+        children: /* @__PURE__ */branch(() => cond ? 0 : 1, [() => 'yes', () => 'no'])
       });"
     `)
   })
@@ -41,7 +41,7 @@ describe('Children 处理', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => 'yes', () => 'no'])
+        children: /* @__PURE__ */branch(() => show ? 0 : 1, [() => 'yes', () => 'no'])
       });"
     `)
   })
@@ -209,7 +209,7 @@ describe('边界情况', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => show ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "yes"
         }), () => /* @__PURE__ */createView("span", {
           children: "no"
