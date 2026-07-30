@@ -6,7 +6,7 @@ describe('v-if 连续链', () => {
     const code = `const App = () => <div v-if={show}>visible</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(show) ? 0 : null, [() => /* @__PURE__ */createView("div", {
         children: "visible"
       })]);"
@@ -20,7 +20,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "visible"
@@ -39,7 +39,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "visible"
@@ -60,7 +60,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -80,7 +80,7 @@ describe('v-if 连续链', () => {
     </div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(show) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "visible"
@@ -99,7 +99,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -120,7 +120,7 @@ describe('v-if 连续链', () => {
     </section>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("section", {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -140,7 +140,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : null), [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -160,7 +160,7 @@ describe('v-if 连续链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : (unref(c) ? 2 : 3)), [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -187,7 +187,7 @@ describe('嵌套 v-if 链', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: /* @__PURE__ */branch(() => unref(outer) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "outer"
@@ -211,7 +211,7 @@ describe('嵌套 v-if 链', () => {
     )`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
         children: ["A", /* @__PURE__ */branch(() => unref(b) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "B"
@@ -230,7 +230,7 @@ describe('嵌套 v-if 链', () => {
     </div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : null, [() => /* @__PURE__ */createView("div", {
           children: /* @__PURE__ */branch(() => unref(b) ? 0 : null, [() => /* @__PURE__ */createView("div", {
@@ -256,7 +256,7 @@ describe('v-if 链与容器类型', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: [/* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -278,7 +278,7 @@ describe('v-if 链与容器类型', () => {
     </div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: [/* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -302,7 +302,7 @@ describe('v-if 链与容器类型', () => {
     </div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
         children: [/* @__PURE__ */createView("h1", {
           children: "title"
@@ -323,7 +323,7 @@ describe('v-if 链与容器类型', () => {
     </>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, Fragment, branch } from "vitarx";
+      "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
         children: [/* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "A"
@@ -342,7 +342,7 @@ describe('v-if 链与容器类型', () => {
     </Wrapper>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, branch } from "vitarx";
+      "import { createView, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Wrapper, {
         children: /* @__PURE__ */branch(() => unref(a) ? 0 : 1, [() => /* @__PURE__ */createView("div", {
           children: "A"
