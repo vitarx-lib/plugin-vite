@@ -1,14 +1,27 @@
-## [1.0.4](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.3...v1.0.4) (2026-07-04)
+## [1.0.5](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.4...v1.0.5) (2026-07-31)
 
 
 ### Bug Fixes
 
-* **jsx:** 处理包含插值的模板字面量以启用响应式追踪 ([dcc094b](https://github.com/vitarx-lib/plugin-vite/commit/dcc094b9fe8c2f5550841f65fa842407cc3a5425))
+* **directives:** 优化 value 属性的 ref 判断逻辑 ([ca93ec7](https://github.com/vitarx-lib/plugin-vite/commit/ca93ec7919571c0126f40ea5530e0d66b8cb8467))
+* **hmr-client:** 修复 AST 解析中 CallExpression 节点类型定义问题 ([bd0d3ba](https://github.com/vitarx-lib/plugin-vite/commit/bd0d3ba228fde2a0a2f948e5992b4a0ba2602153))
+* **imports:** 修正组件函数中 ref 变量的收集逻辑 ([f5a2500](https://github.com/vitarx-lib/plugin-vite/commit/f5a2500cf4c93cf646c8979ce842e9bfcf4109e7))
+* **props:** 修复 ref 属性不解包导致绑定失效的问题 ([b1a99e8](https://github.com/vitarx-lib/plugin-vite/commit/b1a99e8c7632dad47fa176eb6f71b36e9b9e9619))
+* **types:** 修正 v-if 指令对 ref 自动解包的描述 ([25c0cdc](https://github.com/vitarx-lib/plugin-vite/commit/25c0cdcaf61927a17f11430aeb82cf26ecd3ef62))
+
+## [1.0.4](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.3...v1.0.4) (2026-07-04)
 
 
 ### Features
 
 * **vif:** 支持 JSX 注释不中断 v-if 链解析 ([85e230a](https://github.com/vitarx-lib/plugin-vite/commit/85e230ae04bdf818516fc356ef0c4a67302c6e2c))
+
+## [1.0.3](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.2...v1.0.3) (2026-06-27)
+
+
+### Bug Fixes
+
+* **jsx:** 处理包含插值的模板字面量以启用响应式追踪 ([dcc094b](https://github.com/vitarx-lib/plugin-vite/commit/dcc094b9fe8c2f5550841f65fa842407cc3a5425))
 
 ## [1.0.2](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.2-alpha.0...v1.0.2) (2026-06-06)
 
