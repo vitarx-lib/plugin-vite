@@ -20,8 +20,7 @@ export {
   removeAttribute,
   filterWhitespaceChildren,
   hasEffectiveChildren,
-  filterEffectiveChildren,
-  validateNoDirectMatchChild
+  filterEffectiveChildren
 } from './jsx-helpers.js'
 
 // AST 构建函数
@@ -62,4 +61,4 @@ export {
 export { collectComponentFunctions, type ComponentInfo } from './component-collect.js'
 
 // 生成器
-export { generateUniqueAlias } from './generate.js'
+export { generateUniqueAlias, generateUniqueDefaultName } from './generate.js'

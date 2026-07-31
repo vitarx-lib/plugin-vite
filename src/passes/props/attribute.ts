@@ -140,6 +140,10 @@ export function createProperty(
     if (key === 'children' || key === 'ref') {
       return t.objectProperty(keyNode, value)
     }
+    // 已知非 ref 变量（函数声明、箭头函数等）：静态分析确定非 ref，直接赋值无需 unref
+    if (ctx.nonRefVariables.has(value.name)) {
+      return t.objectProperty(keyNode, value)
+    }
     // 如果是 ref 变量，创建 getter 方法返回 ref 的 value
     if (ctx.refVariables.has(value.name)) {
       return createGetter(
@@ -147,7 +151,7 @@ export function createProperty(
         t.returnStatement(t.memberExpression(value, t.identifier('value')))
       )
     }
-    // 其他标识符属性创建 unref getter（非 ref 原样返回，安全）
+    // 未知标识符：创建 unref getter（非 ref 原样返回，安全）
     return createUnrefGetter(keyNode, value, ctx)
   }
 

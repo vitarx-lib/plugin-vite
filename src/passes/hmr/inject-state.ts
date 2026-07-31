@@ -129,6 +129,12 @@ export function createWrappedComponentHMRStatements(componentName: string): t.St
 }
 
 /**
+ * 变量声明访问者回调类型
+ * 用于遍历语句块中的所有 VariableDeclarator 节点
+ */
+type VariableDeclaratorVisitor = (decl: t.VariableDeclarator) => void
+
+/**
  * 从函数体中收集局部变量名
  * 递归遍历函数体中的所有变量声明，用于状态恢复
  * @param functionBody - 函数体语句块
@@ -136,84 +142,73 @@ export function createWrappedComponentHMRStatements(componentName: string): t.St
  */
 export function collectLocalVariableNames(functionBody: t.BlockStatement): string[] {
   const variableNames = new Set<string>()
-  collectFromBlock(functionBody, variableNames)
+  forEachVariableDeclarator(functionBody, decl => {
+    if (decl.id.type !== 'VoidPattern') {
+      collectPatternBindings(decl.id, variableNames)
+    }
+  })
   return Array.from(variableNames)
 }
 
 /**
- * 从语句块中收集变量名
+ * 遍历语句块中的所有变量声明，对每个 VariableDeclarator 执行回调
+ * 递归处理嵌套的控制流语句（if/for/while/switch/try 等）
  * @param block - 语句块节点
- * @param variableNames - 存储变量名的集合
+ * @param visitor - 变量声明访问者回调
  */
-function collectFromBlock(block: t.BlockStatement, variableNames: Set<string>): void {
-  // 遍历语句块中的每个语句
+function forEachVariableDeclarator(block: t.BlockStatement, visitor: VariableDeclaratorVisitor): void {
   for (const stmt of block.body) {
-    collectFromStatement(stmt, variableNames)
+    traverseStatementForDeclarators(stmt, visitor)
   }
 }
 
 /**
- * 从单个语句中收集变量名
+ * 从单个语句中递归查找变量声明并执行回调
  * 支持多种语句类型：变量声明、条件语句、循环语句、switch、try-catch 等
  * @param stmt - 语句节点
- * @param variableNames - 存储变量名的集合
+ * @param visitor - 变量声明访问者回调
  */
-function collectFromStatement(stmt: t.Statement, variableNames: Set<string>): void {
-  // 处理变量声明语句：const/let/var
+function traverseStatementForDeclarators(stmt: t.Statement, visitor: VariableDeclaratorVisitor): void {
   if (stmt.type === 'VariableDeclaration') {
     for (const decl of stmt.declarations) {
-      // 跳过 void 模式（如 void 0）
-      if (decl.id.type !== 'VoidPattern') {
-        collectPatternBindings(decl.id, variableNames)
-      }
+      visitor(decl)
     }
   } else if (stmt.type === 'IfStatement') {
-    // 递归处理 if 语句的两个分支
-    if (stmt.consequent.type === 'BlockStatement') {
-      collectFromBlock(stmt.consequent, variableNames)
-    } else {
-      collectFromStatement(stmt.consequent, variableNames)
-    }
+    traverseBodyForDeclarators(stmt.consequent, visitor)
     if (stmt.alternate) {
-      if (stmt.alternate.type === 'BlockStatement') {
-        collectFromBlock(stmt.alternate, variableNames)
-      } else {
-        collectFromStatement(stmt.alternate, variableNames)
-      }
+      traverseBodyForDeclarators(stmt.alternate, visitor)
     }
   } else if (stmt.type === 'ForStatement' || stmt.type === 'WhileStatement' || stmt.type === 'DoWhileStatement') {
-    // 处理 for/while/do-while 循环
-    if (stmt.body.type === 'BlockStatement') {
-      collectFromBlock(stmt.body, variableNames)
-    } else {
-      collectFromStatement(stmt.body, variableNames)
-    }
+    traverseBodyForDeclarators(stmt.body, visitor)
   } else if (stmt.type === 'ForInStatement' || stmt.type === 'ForOfStatement') {
-    // 处理 for...in/for...of 循环
-    if (stmt.body.type === 'BlockStatement') {
-      collectFromBlock(stmt.body, variableNames)
-    } else {
-      collectFromStatement(stmt.body, variableNames)
-    }
+    traverseBodyForDeclarators(stmt.body, visitor)
   } else if (stmt.type === 'BlockStatement') {
-    // 处理嵌套语句块
-    collectFromBlock(stmt, variableNames)
+    forEachVariableDeclarator(stmt, visitor)
   } else if (stmt.type === 'SwitchStatement') {
-    // 处理 switch 语句，遍历所有 case
     for (const c of stmt.cases) {
       for (const s of c.consequent) {
-        collectFromStatement(s, variableNames)
+        traverseStatementForDeclarators(s, visitor)
       }
     }
   } else if (stmt.type === 'TryStatement') {
-    // 处理 try-catch-finally
-    collectFromBlock(stmt.block, variableNames)
+    forEachVariableDeclarator(stmt.block, visitor)
     if (stmt.handler) {
-      collectFromBlock(stmt.handler.body, variableNames)
+      forEachVariableDeclarator(stmt.handler.body, visitor)
     }
     if (stmt.finalizer) {
-      collectFromBlock(stmt.finalizer, variableNames)
+      forEachVariableDeclarator(stmt.finalizer, visitor)
     }
+  }
+}
+
+/**
+ * 遍历语句体（可能是 BlockStatement 或单条语句）中的变量声明
+ */
+function traverseBodyForDeclarators(body: t.Statement, visitor: VariableDeclaratorVisitor): void {
+  if (body.type === 'BlockStatement') {
+    forEachVariableDeclarator(body, visitor)
+  } else {
+    traverseStatementForDeclarators(body, visitor)
   }
 }
 
@@ -273,15 +268,11 @@ function injectStatePreservationForDeclaration(decl: t.VariableDeclarator): void
 
 /**
  * 为函数体内的变量声明注入状态恢复代码
- * 遍历函数体中的所有变量声明语句
+ * 递归遍历所有变量声明（包括 if/for/while/switch/try 嵌套块）
  * @param functionBody - 函数体语句块
  */
 export function injectStatePreservation(functionBody: t.BlockStatement): void {
-  for (const stmt of functionBody.body) {
-    if (stmt.type === 'VariableDeclaration') {
-      for (const decl of stmt.declarations) {
-        injectStatePreservationForDeclaration(decl)
-      }
-    }
-  }
+  forEachVariableDeclarator(functionBody, decl => {
+    injectStatePreservationForDeclaration(decl)
+  })
 }

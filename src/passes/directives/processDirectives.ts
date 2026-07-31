@@ -6,7 +6,7 @@
 import * as t from '@babel/types'
 import { isIdentifier } from '@babel/types'
 import { markImport, TransformContext } from '../../context.js'
-import type { DirectiveInfo } from '../../passes/props/types.js'
+import type { DirectiveInfo } from '../props/types.js'
 import { addPureComment, createWithDirectivesCall, getAlias } from '../../utils/index.js'
 
 /**
@@ -64,7 +64,7 @@ function buildDirectiveValue(
 
   // 添加 value 属性
   if (isIdentifier(value)) {
-    // 如果值是一个标识符：已知 ref 用 .value，否则用 unref()
+    // 三态决策：已知 ref → .value，已知非 ref → 原样，未知 → unref()
     if (ctx.refVariables.has(value.name)) {
       // 已知 ref：直接使用 .value
       properties.push(
@@ -75,8 +75,18 @@ function buildDirectiveValue(
           t.blockStatement([t.returnStatement(t.memberExpression(value, t.identifier('value')))])
         )
       )
+    } else if (ctx.nonRefVariables.has(value.name)) {
+      // 已知非 ref（函数等）：原样返回，无需 unref
+      properties.push(
+        t.objectMethod(
+          'get',
+          t.identifier('value'),
+          [],
+          t.blockStatement([t.returnStatement(value)])
+        )
+      )
     } else {
-      // 非已知 ref：使用 unref() 解包（非 ref 原样返回）
+      // 未知标识符：使用 unref() 解包（非 ref 原样返回）
       markImport(ctx, 'unref')
       const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
       properties.push(

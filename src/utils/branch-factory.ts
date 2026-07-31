@@ -97,15 +97,18 @@ export function buildNestedCondition(
       continue
     }
 
-    // 构建条件表达式：对标识符进行两态解包
-    // 已知 ref → .value（高效，无需导入），否则 → unref()（安全，标记导入）
+    // 构建条件表达式：对标识符进行三态解包
+    // 已知 ref → .value（高效），已知非 ref → 原样（静态分析确定），未知 → unref()（安全）
     let conditionExpr: t.Expression
     if (useRef && isIdentifier(condition)) {
       if (ctx.refVariables.has(condition.name)) {
         // 已知 ref：直接使用 .value
         conditionExpr = t.memberExpression(condition, t.identifier('value'))
+      } else if (ctx.nonRefVariables.has(condition.name)) {
+        // 已知非 ref（函数等）：原样使用，无需解包
+        conditionExpr = condition
       } else {
-        // 非已知 ref：使用 unref() 解包（非 ref 原样返回）
+        // 未知标识符：使用 unref() 解包（非 ref 原样返回）
         markImport(ctx, 'unref')
         conditionExpr = createUnrefCall(condition, unrefAlias)
       }

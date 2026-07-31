@@ -5,16 +5,34 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXElement } from '@babel/types'
 import { markImport, type TransformContext } from '../../context.js'
+import { createError } from '../../error.js'
 import {
   addPureComment,
   createCreateViewCall,
   filterWhitespaceChildren,
   getAlias,
   getDevLocInfo,
-  validateNoDirectMatchChild
+  getJSXElementName
 } from '../../utils/index.js'
 import { processChildren } from './processChildren.js'
+
+/**
+ * 校验子节点中不能直接包含 Match 组件
+ * Match 必须在 Switch 内使用，非 Switch 元素的子节点中不允许出现 Match
+ * @param children - 子节点数组
+ */
+function validateNoDirectMatchChild(children: t.Node[]): void {
+  for (const child of children) {
+    if (isJSXElement(child)) {
+      const childName = getJSXElementName(child)
+      if (childName === 'Match') {
+        throw createError('E012', child)
+      }
+    }
+  }
+}
 
 /**
  * 处理 JSX Fragment

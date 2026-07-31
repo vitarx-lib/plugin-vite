@@ -6,7 +6,6 @@
 import * as t from '@babel/types'
 import {
   type Expression,
-  isJSXElement,
   isJSXText,
   type JSXAttribute,
   type JSXElement
@@ -16,7 +15,6 @@ import {
   PURE_COMPILE_COMPONENTS,
   V_IF_CHAIN_DIRECTIVES
 } from '../constants/index.js'
-import { createError } from '../error.js'
 import { isWhitespaceJSXText } from './ast-guards.js'
 
 /**
@@ -77,7 +75,7 @@ function jsxMemberExprToMemberExpr(node: t.JSXMemberExpression): t.MemberExpress
  * @returns 是否为纯编译组件
  */
 export function isPureCompileComponent(name: string): boolean {
-  return PURE_COMPILE_COMPONENTS.includes(name as any)
+  return (PURE_COMPILE_COMPONENTS as readonly string[]).includes(name)
 }
 
 /**
@@ -287,17 +285,5 @@ export function filterEffectiveChildren(node: JSXElement): t.Node[] {
 }
 
 /**
- * 校验子节点中不能直接包含 Match 组件
- * Match 必须在 Switch 内使用，非 Switch 元素的子节点中不允许出现 Match
- * @param children - 子节点数组
+ * 过滤掉空白文本子节点
  */
-export function validateNoDirectMatchChild(children: t.Node[]): void {
-  for (const child of children) {
-    if (isJSXElement(child)) {
-      const childName = getJSXElementName(child)
-      if (childName === 'Match') {
-        throw createError('E012', child)
-      }
-    }
-  }
-}

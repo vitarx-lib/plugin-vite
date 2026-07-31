@@ -169,6 +169,18 @@ describe('branch-factory', () => {
       expect(ctx.imports.unref).toBe(true)
     })
 
+    it('已知非 ref 标识符条件原样使用不标记 unref 导入', () => {
+      const ctx = createMockContext()
+      ctx.nonRefVariables.add('handleClick')
+      const config = {
+        conditions: [identifier('handleClick')],
+        branches: [arrowFunctionExpression([], identifier('a'))]
+      }
+      createBranch(config, ctx)
+      // 已知非 ref（函数等），原样使用，不需要导入 unref
+      expect(ctx.imports.unref).toBe(false)
+    })
+
     it('非标识符条件不标记 unref 导入', () => {
       const ctx = createMockContext()
       const config = {

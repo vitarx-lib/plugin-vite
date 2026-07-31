@@ -73,7 +73,7 @@ describe('ref 属性应直接赋值标识符本身（不解包）', () => {
   })
 
   it('非 ref API 创建的普通变量直接赋值（不 unref）', async () => {
-    // 既不在 refVariables 也不在 nonRefVariables 的普通变量，
+    // 既不在 refVariables 中的普通变量，
     // 修复前会走 createUnrefGetter 生成 unref(divRef)
     const code = `const divRef = getRef(); const App = () => <div ref={divRef}></div>`
     const result = await compile(code)
@@ -103,7 +103,7 @@ describe('ref 属性的回调函数形式保持直接赋值（回归保护）', 
   })
 
   it('函数声明变量直接赋值', async () => {
-    // 函数声明在 nonRefVariables 中，本来就走 objectProperty 直接赋值
+    // 函数声明不是 ref，ref 属性保持直接赋值
     const code = `function handleRef(el) {} const App = () => <div ref={handleRef}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`

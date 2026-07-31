@@ -173,7 +173,9 @@ function collectSingleChainFromFragment(
   startIndex: number
 ): VIfChainInfo & { endIndex: number } {
   const nodes: t.JSXElement[] = [children[startIndex] as t.JSXElement]
-  const conditions: t.Expression[] = [getDirectiveValue(nodes[0], 'v-if')!]
+  // v-if 指令值已由 validateVIfChain 保证存在，fallback 为 true（无表达式时）
+  const vIfValue = getDirectiveValue(nodes[0], 'v-if') ?? t.booleanLiteral(true)
+  const conditions: t.Expression[] = [vIfValue]
 
   let j = startIndex + 1
   // 继续收集后续的 v-else-if 和 v-else
@@ -198,9 +200,10 @@ function collectSingleChainFromFragment(
     if (!isVIfChain(nextChild)) break
 
     if (isVElseIf(nextChild)) {
-      // 收集 v-else-if
+      // 收集 v-else-if，值已由 validateVIfChain 保证存在
       nodes.push(nextChild)
-      conditions.push(getDirectiveValue(nextChild, 'v-else-if')!)
+      const vElseIfValue = getDirectiveValue(nextChild, 'v-else-if') ?? t.booleanLiteral(true)
+      conditions.push(vElseIfValue)
       j++
     } else if (isVElse(nextChild)) {
       // 收集 v-else 并结束链

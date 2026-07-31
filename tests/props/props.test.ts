@@ -331,60 +331,66 @@ describe('ref 变量优化', () => {
   })
 })
 
-describe('nonRef 优化', () => {
-  it('函数声明作为属性值不使用 unref', async () => {
+describe('已知非 ref 标识符属性直接赋值（不使用 unref）', () => {
+  it('函数声明作为属性值直接赋值', async () => {
     const code = `function handleClick() {} const App = () => <div onClick={handleClick}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, unref } from "vitarx";
+      "import { createView } from "vitarx";
       function handleClick() {}
       const App = () => /* @__PURE__ */createView("div", {
-        get "onClick"() {
-          return unref(handleClick);
-        }
+        "onClick": handleClick
       });"
     `)
   })
 
-  it('箭头函数变量作为属性值不使用 unref', async () => {
+  it('箭头函数变量作为属性值直接赋值', async () => {
     const code = `const fn = () => {}; const App = () => <div onClick={fn}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, unref } from "vitarx";
+      "import { createView } from "vitarx";
       const fn = () => {};
       const App = () => /* @__PURE__ */createView("div", {
-        get "onClick"() {
-          return unref(fn);
-        }
+        "onClick": fn
       });"
     `)
   })
 
-  it('函数表达式变量作为属性值不使用 unref', async () => {
+  it('函数表达式变量作为属性值直接赋值', async () => {
     const code = `const fn = function() {}; const App = () => <div onClick={fn}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, unref } from "vitarx";
+      "import { createView } from "vitarx";
       const fn = function () {};
       const App = () => /* @__PURE__ */createView("div", {
-        get "onClick"() {
-          return unref(fn);
-        }
+        "onClick": fn
       });"
     `)
   })
 
-  it('导出的函数声明作为属性值不使用 unref', async () => {
+  it('导出的函数声明作为属性值直接赋值', async () => {
     const code = `export function handleClick() {} const App = () => <div onClick={handleClick}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView, unref } from "vitarx";
+      "import { createView } from "vitarx";
       export function handleClick() {}
       const App = () => /* @__PURE__ */createView("div", {
-        get "onClick"() {
-          return unref(handleClick);
-        }
+        "onClick": handleClick
       });"
+    `)
+  })
+
+  it('匿名默认导出函数内部声明的箭头函数变量直接赋值', async () => {
+    const code = `export default function() { const handler = () => {}; return <div onClick={handler}></div> }`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView } from "vitarx";
+      export default function _defaultExport() {
+        const handler = () => {};
+        return /* @__PURE__ */createView("div", {
+          "onClick": handler
+        });
+      }"
     `)
   })
 })

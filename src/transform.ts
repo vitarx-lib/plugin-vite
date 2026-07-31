@@ -91,13 +91,15 @@ function setupAliases(ctx: TransformContext, program: t.Program): void {
 
 /**
  * 收集 ref 相关信息
+ * 注意：nonRefVariables 在 collectComponentFunctions 之后单独收集，
+ * 因为匿名默认导出需要先被转换为命名函数才能被识别
  */
 function collectRefInfo(ctx: TransformContext, program: t.Program): void {
   const refApiAliases = collectRefApiAliases(program)
   ctx.refApiAliases = refApiAliases
   ctx.refVariables = collectRefVariables(program, refApiAliases)
-  ctx.nonRefVariables = collectNonRefVariables(program)
 }
+
 /**
  * 转换 AST
  */
@@ -189,6 +191,10 @@ export async function transform(
   collectRefInfo(ctx, ast.program)
 
   const components = collectComponentFunctions(ast.program, ctx.builderAlias)
+
+  // 在组件函数收集之后收集非 ref 变量
+  // 此时匿名默认导出已被转换为命名函数，可被正确识别为非 ref
+  ctx.nonRefVariables = collectNonRefVariables(ast.program)
 
   transformAST(ast, ctx)
 

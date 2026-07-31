@@ -6,7 +6,7 @@
 import * as t from '@babel/types'
 import { REF_APIS, RESPONSIVE_MODULES } from '../../constants/index.js'
 import type { RefApiAliases } from '../../context.js'
-import { collectPatternBindings, collectObjectPatternBindings } from '../../utils/index.js'
+import { collectObjectPatternBindings, collectPatternBindings } from '../../utils/index.js'
 
 /**
  * 收集 ref API 的别名
@@ -30,7 +30,7 @@ export function collectRefApiAliases(program: t.Program): RefApiAliases {
     if (node.type !== 'ImportDeclaration') continue
     const source = node.source.value
     // 只处理 vitarx 和 @vitarx/responsive 模块
-    if (!RESPONSIVE_MODULES.includes(source as any)) continue
+    if (!(RESPONSIVE_MODULES as readonly string[]).includes(source)) continue
 
     // 遍历导入说明符
     for (const specifier of node.specifiers) {
@@ -44,7 +44,7 @@ export function collectRefApiAliases(program: t.Program): RefApiAliases {
           : specifier.imported.value
 
       // 如果是 ref API，记录别名映射
-      if (Object.values(REF_APIS).includes(importedName as any)) {
+      if ((Object.values(REF_APIS) as readonly string[]).includes(importedName)) {
         aliases[importedName as keyof RefApiAliases] = specifier.local.name
       }
     }
@@ -147,27 +147,28 @@ function collectRefVariablesFromNode(
       }
     }
   }
+  // 控制流语句（if/for/while/switch/try）中的变量声明不递归收集
+  // 函数控制流中通常不会声明 ref 变量，仅收集模块顶层和函数体顶层
 }
 
 /**
  * 收集确定不是 ref 的变量
  * 包括函数声明、箭头函数和函数表达式变量（这些不可能是 ref）
+ * 静态分析能明确变量类型时，跳过 unref 包装以提升性能
  * @param program - AST Program 节点
  * @returns 非 ref 变量名集合
  */
 export function collectNonRefVariables(program: t.Program): Set<string> {
   const nonRefVariables = new Set<string>()
-
-  // 遍历程序体中的所有节点
   for (const node of program.body) {
     collectNonRefFromNode(node, nonRefVariables)
   }
-
   return nonRefVariables
 }
 
 /**
  * 从节点中递归收集非 ref 变量
+ * 仅处理模块顶层和函数体顶层的声明，不递归控制流语句
  * @param node - AST 节点
  * @param nonRefVariables - 存储非 ref 变量名的集合
  */
@@ -175,26 +176,21 @@ function collectNonRefFromNode(node: t.Node, nonRefVariables: Set<string>): void
   // 函数声明一定不是 ref
   if (node.type === 'FunctionDeclaration' && node.id) {
     nonRefVariables.add(node.id.name)
-    // 递归处理函数体内的变量
     if (node.body) {
       for (const stmt of node.body.body) {
         collectNonRefFromNode(stmt, nonRefVariables)
       }
     }
   } else if (node.type === 'VariableDeclaration') {
-    // 变量声明：只有箭头函数或函数表达式才是非 ref
+    // 变量声明：箭头函数或函数表达式赋值一定不是 ref
     for (const decl of node.declarations) {
       if (!decl.init) continue
       const init = decl.init
-      if (
-        init.type === 'ArrowFunctionExpression' ||
-        init.type === 'FunctionExpression'
-      ) {
-        // 只处理简单标识符（不处理解构）
+      if (init.type === 'ArrowFunctionExpression' || init.type === 'FunctionExpression') {
         if (decl.id.type === 'Identifier') {
           nonRefVariables.add(decl.id.name)
         }
-        // 递归处理函数体内的变量声明，收集内部非 ref 变量
+        // 递归处理函数体内的变量声明
         if (init.body.type === 'BlockStatement') {
           for (const stmt of init.body.body) {
             collectNonRefFromNode(stmt, nonRefVariables)
@@ -202,18 +198,31 @@ function collectNonRefFromNode(node: t.Node, nonRefVariables: Set<string>): void
         }
       }
     }
-  } else if (node.type === 'ExportNamedDeclaration') {
-    // 处理命名导出的声明
-    if (node.declaration) {
-      collectNonRefFromNode(node.declaration, nonRefVariables)
-    }
+  } else if (node.type === 'ExportNamedDeclaration' && node.declaration) {
+    collectNonRefFromNode(node.declaration, nonRefVariables)
   } else if (node.type === 'ExportDefaultDeclaration') {
-    // 处理默认导出
     const decl = node.declaration
-    if (decl.type === 'FunctionDeclaration' && decl.id) {
-      nonRefVariables.add(decl.id.name)
+    if (decl.type === 'FunctionDeclaration') {
+      if (decl.id) {
+        nonRefVariables.add(decl.id.name)
+      }
+      // 递归处理函数体，收集内部非 ref 变量（与 collectRefVariablesFromNode 一致）
+      if (decl.body) {
+        for (const stmt of decl.body.body) {
+          collectNonRefFromNode(stmt, nonRefVariables)
+        }
+      }
+    } else if (
+      (decl.type === 'ArrowFunctionExpression' || decl.type === 'FunctionExpression') &&
+      decl.body.type === 'BlockStatement'
+    ) {
+      // 处理未被转换的箭头函数/函数表达式默认导出
+      for (const stmt of decl.body.body) {
+        collectNonRefFromNode(stmt, nonRefVariables)
+      }
     }
   }
+  // 控制流语句（if/for/while/switch/try）中的变量声明不递归收集
 }
 
 /**
