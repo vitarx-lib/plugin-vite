@@ -69,7 +69,7 @@ function separateLogicAndRender(functionCode: string): SeparationResult {
 
     // 遍历 AST 收集所有 UI API 调用节点
     walkSimple(ast as Node, {
-      CallExpression(node: any) {
+      CallExpression(node) {
         const callee = node.callee
 
         // 直接调用：createView(...)
