@@ -253,8 +253,23 @@ describe('HMR 协议结构', () => {
         return <div>{count}{name}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR_VIEW_STATE$__')
-      expect(result).toContain('Promise.resolve().then')
+      // 惰性登记：通过 trackState 登记状态 getter，而非直接写视图
+      expect(result).toContain('__$VITARX_HMR$__.instance.trackState')
+      // 不再使用异步保存旧协议
+      expect(result).not.toContain('Promise.resolve().then')
+      expect(result).not.toContain('__$VITARX_HMR_VIEW_STATE$__ =')
+    })
+
+    it('trackState 以 getter 形式登记变量', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      // getter 惰性求值：登记时不读取变量，热更新快照时才读取
+      expect(result).toMatch(
+        /trackState\(__\$VITARX_HMR_VIEW_NODE\$__,\s*\{\s*get\s+count\(\)\s*\{\s*return\s+count\s*;?\s*\}\s*\}/
+      )
     })
 
     it('保存对象解构变量', async () => {
@@ -263,7 +278,7 @@ describe('HMR 协议结构', () => {
         return <div>{a}{b}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR_VIEW_STATE$__')
+      expect(result).toContain('__$VITARX_HMR$__.instance.trackState')
     })
 
     it('保存数组解构变量', async () => {
@@ -272,7 +287,7 @@ describe('HMR 协议结构', () => {
         return <div>{a}{b}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR_VIEW_STATE$__')
+      expect(result).toContain('__$VITARX_HMR$__.instance.trackState')
     })
 
     it('函数声明组件也保存状态', async () => {
@@ -281,7 +296,7 @@ describe('HMR 协议结构', () => {
         return <div>{count}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR_VIEW_STATE$__')
+      expect(result).toContain('__$VITARX_HMR$__.instance.trackState')
     })
   })
 
@@ -580,7 +595,7 @@ describe('HMR 协议结构', () => {
       // 验证不注入 memo 状态恢复
       expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
       // 验证不注入状态保存代码
-      expect(result).not.toContain('__$VITARX_HMR_VIEW_STATE$__')
+      expect(result).not.toContain('instance.trackState')
     })
 
     it('默认导出的 builder 包装组件支持 HMR', async () => {
@@ -610,7 +625,7 @@ describe('HMR 协议结构', () => {
         /__\$VITARX_HMR\$__\.instance\.register\(__\$VITARX_HMR_VIEW_NODE\$__,\s*App\)/
       )
       // 验证没有状态保存代码
-      expect(result).not.toContain('Promise.resolve().then')
+      expect(result).not.toContain('instance.trackState')
     })
 
     it('多个 builder 包装组件都支持 HMR', async () => {
@@ -680,7 +695,7 @@ describe('HMR 协议结构', () => {
       // 验证不注入 memo 状态恢复
       expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
       // 验证不注入状态保存代码
-      expect(result).not.toContain('__$VITARX_HMR_VIEW_STATE$__')
+      expect(result).not.toContain('instance.trackState')
     })
 
     it('变量声明 builder 包装组件生成正确的注册代码', async () => {

@@ -31,6 +31,13 @@ export default class HMRManager {
    */
   #idMapToComponent = new Map<string, Component>()
   /**
+   * 视图状态 getter 登记表
+   *
+   * 组件函数每次执行时通过 trackState 登记当前作用域状态的惰性读取器，
+   * 热更新时读取一次生成快照；视图销毁/重挂载不会保留，避免旧状态泄漏。
+   */
+  #viewStateGetters = new WeakMap<ComponentView, Record<string, () => any>>()
+  /**
    * 获取单实例
    */
   static get instance(): HMRManager {
@@ -101,6 +108,38 @@ export default class HMRManager {
     return Reflect.get(component, HMR.id)
   }
   /**
+   * 登记视图状态 getter
+   *
+   * 由转换器注入的代码在组件函数每次执行时调用，登记当前作用域的
+   * 惰性状态读取器（同一视图重复登记覆盖旧的）。读取动作延迟到
+   * 热更新快照时发生，正常挂载/重挂载不会产生任何状态残留。
+   *
+   * @param {ComponentView} view - 组件视图
+   * @param {Record<string, () => any>} getters - 变量名到读取器的映射
+   */
+  trackState(view: ComponentView, getters: Record<string, () => any>): void {
+    if (!view) return
+    this.#viewStateGetters.set(view, getters)
+  }
+  /**
+   * 生成视图状态快照并写入视图，供热更新重执行时 memo 恢复
+   *
+   * @param {ComponentView} view - 组件视图
+   */
+  #snapshotState(view: ComponentView): void {
+    const getters = this.#viewStateGetters.get(view)
+    if (!getters) return
+    const snapshot: Record<string, any> = {}
+    for (const name in getters) {
+      try {
+        snapshot[name] = getters[name]()
+      } catch {
+        // 单个变量读取失败（如暂时性死区）不影响其余状态恢复
+      }
+    }
+    view[HMR.state] = snapshot
+  }
+  /**
    * 模块更新
    *
    * @param newModule - 新模块对象
@@ -134,8 +173,16 @@ export default class HMRManager {
           if (updatedView.has(view)) continue
           // 仅在视图是活跃状态，且已挂载时才更新
           if (view.isActive && view.isMounted) {
-            // 处理视图更新
-            processUpdate(view, this.resolveComponent(view.component))
+            // 重执行前快照当前状态，使组件函数重执行时 memo 命中、保留状态
+            this.#snapshotState(view)
+            try {
+              // 处理视图更新
+              processUpdate(view, this.resolveComponent(view.component))
+            } finally {
+              // 快照仅服务于本次热更新，用完即清——
+              // 保证后续正常的「卸载→重挂载」拿到全新状态，与生产行为一致
+              delete view[HMR.state]
+            }
             // 标记视图已更新
             updatedView.add(view)
           }

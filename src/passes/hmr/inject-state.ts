@@ -52,10 +52,12 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
-  // 语句3: __$VITARX_HMR_VIEW_NODE$__ && Promise.resolve().then(() => {
-  //   __$VITARX_HMR_VIEW_NODE$__.__$vitarx_hmr_state$__ = { get 变量名() { return 变量名 } }
-  // })
-  // 异步保存状态到视图节点，确保 DOM 更新完成后再保存
+  // 语句3: __$VITARX_HMR_VIEW_NODE$__ && __$VITARX_HMR$__.instance.trackState(
+  //   __$VITARX_HMR_VIEW_NODE$__,
+  //   { get 变量名() { return 变量名 } }
+  // )
+  // 惰性登记状态 getter：只在热更新时由管理器读取快照写入视图，
+  // 正常「卸载→重挂载」不会写入状态，memo 永远不命中，避免旧状态泄漏
   statements.push(
     t.expressionStatement(
       t.logicalExpression(
@@ -63,26 +65,10 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
         t.identifier(HMR.view),
         t.callExpression(
           t.memberExpression(
-            t.callExpression(
-              t.memberExpression(t.identifier('Promise'), t.identifier('resolve')),
-              []
-            ),
-            t.identifier('then')
+            t.memberExpression(t.identifier(HMR.manager), t.identifier('instance')),
+            t.identifier('trackState')
           ),
-          [
-            t.arrowFunctionExpression(
-              [],
-              t.blockStatement([
-                t.expressionStatement(
-                  t.assignmentExpression(
-                    '=',
-                    t.memberExpression(t.identifier(HMR.view), t.identifier(HMR.state)),
-                    t.objectExpression(stateProperties)
-                  )
-                )
-              ])
-            )
-          ]
+          [t.identifier(HMR.view), t.objectExpression(stateProperties)]
         )
       )
     )
