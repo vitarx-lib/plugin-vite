@@ -1,14 +1,4 @@
 /**
- * Vitarx 运行时 API 名称
- * 这些 API 需要从 vitarx 包导入
- */
-/**
- * UI 相关的 API 名称列表
- * 这些 API 用于创建视图，在 HMR 时需要识别
- */
-export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'expr', 'accessor', 'withDirectives'] as const
-
-/**
  * Ref 相关 API 名称
  * 用于识别 ref 变量
  */
