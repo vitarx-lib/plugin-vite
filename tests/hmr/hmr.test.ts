@@ -283,6 +283,34 @@ describe('HMR 协议结构', () => {
       expect(result).not.toMatch(/get\s+navigate\(\)/)
     })
 
+    it('解构声明拆分隐藏变量整包 memo（保留 composable 状态）', async () => {
+      const code = `export const App = () => {
+        const { isFullscreen, toggle } = useFullscreen()
+        return <div>{isFullscreen ? 'on' : 'off'}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      // 隐藏变量整包 memoRaw（绕过响应式门禁）+ 原声明解构隐藏变量
+      expect(result).toMatch(
+        /const __\$VITARX_D0\$__ = __\$VITARX_HMR\$__\.instance\.memoRaw\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"__\$VITARX_D0\$__"\) \?\? useFullscreen\(\)/
+      )
+      expect(result).toMatch(/\} = __\$VITARX_D0\$__/)
+      // 快照 getter 登记隐藏变量
+      expect(result).toMatch(/get __\$VITARX_D0\$__\(\)/)
+      // 各绑定名不再单独登记
+      expect(result).not.toMatch(/get\s+isFullscreen\(\)/)
+    })
+
+    it('useModel 调用豁免 memo（桥接状态每次重建）', async () => {
+      const code = `export const App = () => {
+        const value = useModel(props, 'modelValue', '')
+        return <div>{value}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/const value = useModel\(props/)
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"value"\)/)
+      expect(result).not.toMatch(/get\s+value\(\)/)
+    })
+
     it('保存对象解构变量', async () => {
       const code = `export const App = () => {
         const { a, b } = obj

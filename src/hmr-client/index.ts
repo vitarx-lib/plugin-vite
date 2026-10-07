@@ -84,6 +84,20 @@ export default class HMRManager {
     return state
   }
   /**
+   * 无条件恢复状态（不做 Ref/reactive 门禁）
+   *
+   * 供解构声明的隐藏变量使用：composable 返回的控制器是普通对象
+   * （内含 Ref 与函数），memo 的响应式门禁会将其拒收导致恢复永远
+   * 落空。仅限转换器为解构声明生成的代码调用。
+   *
+   * @param {ComponentView} view - 组件视图
+   * @param {string} name - 变量名称
+   */
+  memoRaw(view: ComponentView, name: string): any {
+    if (!view) return undefined
+    return view[HMR.state]?.[name]
+  }
+  /**
    * 注册节点
    *
    * @param view - 组件视图节点
@@ -132,7 +146,9 @@ export default class HMRManager {
     const snapshot: Record<string, any> = {}
     for (const name in getters) {
       try {
-        const value = getters[name]()
+        // 注意：getters 是 getter 属性对象——读取属性即执行 getter 并返回值，
+        // 不能再加调用括号（否则会把返回值当函数调用，全部抛 TypeError）
+        const value: any = getters[name]
         // 防御：函数值（旧编译产物仍可能登记函数变量）不进入快照，
         // 绝不调用组件内的业务函数
         if (typeof value === 'function') continue

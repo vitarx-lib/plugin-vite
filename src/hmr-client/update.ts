@@ -45,6 +45,15 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   }
   // 销毁旧作用域
   instance.scope.dispose()
+  // 清空全部旧生命周期钩子：非 logic 更新不触发任何钩子，钩子注册表始终
+  // 等于「最新一次代码执行」的登记——旧钩子既不触发也不累积（对齐 Vue
+  // 模板热更新语义）。旧副作用引用的是被 memo/快照保留的同一批响应式
+  // 状态，在新视图下依然有效，无需重放生命周期。
+  // （hooks 为运行时实例的 @internal 成员，公开类型未声明，此处窄化访问）
+  const hookStore = (instance as ComponentInstance & { hooks: Record<string, unknown[]> }).hooks
+  for (const hookKey of Object.keys(hookStore)) {
+    delete hookStore[hookKey]
+  }
   // 重新创建新的作用域
   const scope = new EffectScope({
     name: view.name,
@@ -78,9 +87,4 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   instance.subView.init(instance.subViewContext)
   // 挂载新的子树
   instance.subView.mount(placeholder, 'replace')
-  // 重执行期间组件函数可能重新注册 onMounted 等钩子（如文档级事件监听），
-  // 但此路径不经过组件实例的完整挂载流程（无人调用 instance.mounted()），
-  // 需手动触发，否则钩子永久滞留——表现为文档级监听丢失、需整页刷新恢复
-  // （mounted 为运行时类成员但公开类型未声明，此处窄化调用）
-  ;(instance as ComponentInstance & { mounted: () => void }).mounted()
 }

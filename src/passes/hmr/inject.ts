@@ -10,20 +10,17 @@ import { injectHMRImport, injectGetComponentViewImport } from './inject-imports.
 import {
   createHMRRegistrationStatements,
   createWrappedComponentHMRStatements,
-  collectLocalVariableNames,
   injectStatePreservation
 } from './inject-state.js'
 
 /**
  * 为组件函数注入 HMR 注册代码
  * @param func - 函数声明/表达式/箭头函数
- * @param variableNames - 需要追踪的变量名列表
  * @param isWrapped - 是否为包装组件（defineComponent/builder）
  * @param componentName - 组件名称（包装组件需要）
  */
 function injectHMRIntoFunction(
   func: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression,
-  variableNames: string[],
   isWrapped: boolean = false,
   componentName?: string
 ): void {
@@ -36,10 +33,8 @@ function injectHMRIntoFunction(
   // 确保函数体是块语句
   if (!func.body || func.body.type !== 'BlockStatement') return
 
-  // 非包装组件需要注入状态恢复代码
-  if (!isWrapped) {
-    injectStatePreservation(func.body)
-  }
+  // 非包装组件：注入状态恢复代码并收集登记名（单趟完成）
+  const variableNames: string[] = isWrapped ? [] : injectStatePreservation(func.body)
 
   // 根据组件类型创建对应的 HMR 注册语句
   const statements = isWrapped
@@ -145,10 +140,7 @@ export function injectHMRSupport(
 
   // 步骤2: 为每个组件函数注入 HMR 注册代码和状态恢复
   for (const { node, isWrapped, name } of components) {
-    // 收集函数体内的局部变量名（用于状态保存）
-    const variableNames =
-      node.body?.type === 'BlockStatement' ? collectLocalVariableNames(node.body) : []
-    injectHMRIntoFunction(node, variableNames, isWrapped, name)
+    injectHMRIntoFunction(node, isWrapped, name)
   }
 
   // 步骤3: 为每个组件创建 bindId 语句（用于热更新时识别）
