@@ -1,10 +1,15 @@
-## [1.0.5](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.4...v1.0.5) (2026-07-31)
+## [1.0.6](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.5...v1.0.6) (2026-10-07)
 
 
 ### Bug Fixes
 
 * **directives:** 优化 value 属性的 ref 判断逻辑 ([ca93ec7](https://github.com/vitarx-lib/plugin-vite/commit/ca93ec7919571c0126f40ea5530e0d66b8cb8467))
 * **hmr-client:** 修复 AST 解析中 CallExpression 节点类型定义问题 ([bd0d3ba](https://github.com/vitarx-lib/plugin-vite/commit/bd0d3ba228fde2a0a2f948e5992b4a0ba2602153))
+* **hmr:** ctx 须在 dispose 前捕获，修复统一重挂载后 inject 解析失败 ([33046d7](https://github.com/vitarx-lib/plugin-vite/commit/33046d7210e441314a941a1f30576e4f6d0d64c7))
+* **hmr:** 快照修复 getter 误调用 + 解构状态保留 + 钩子清空语义 ([f7b26e9](https://github.com/vitarx-lib/plugin-vite/commit/f7b26e93e1a4837337ad851f80235b30b93a33d0)), closes [#snapshotState](https://github.com/vitarx-lib/plugin-vite/issues/snapshotState)
+* **hmr:** 快照排除函数变量 + 非 logic 更新补偿触发 mounted 钩子 ([d4bb574](https://github.com/vitarx-lib/plugin-vite/commit/d4bb5742544143f427a6cadce0c32ca6827e4ea6))
+* **hmr:** 状态快照改为惰性登记，修复 memo 跨「卸载→重挂载」泄漏旧状态 ([1170a11](https://github.com/vitarx-lib/plugin-vite/commit/1170a11cfd5c8254cdd721ac42e708487390486d))
+* **hmr:** 视图引用改 WeakRef 防泄漏，转发默认导出支持组件级热更新 ([4790432](https://github.com/vitarx-lib/plugin-vite/commit/4790432dc196d9547b3f68a932ed373bcc53434c)), closes [#idMapToView](https://github.com/vitarx-lib/plugin-vite/issues/idMapToView)
 * **imports:** 修正组件函数中 ref 变量的收集逻辑 ([f5a2500](https://github.com/vitarx-lib/plugin-vite/commit/f5a2500cf4c93cf646c8979ce842e9bfcf4109e7))
 * **props:** 修复 ref 属性不解包导致绑定失效的问题 ([b1a99e8](https://github.com/vitarx-lib/plugin-vite/commit/b1a99e8c7632dad47fa176eb6f71b36e9b9e9619))
 * **types:** 修正 v-if 指令对 ref 自动解包的描述 ([25c0cdc](https://github.com/vitarx-lib/plugin-vite/commit/25c0cdcaf61927a17f11430aeb82cf26ecd3ef62))
