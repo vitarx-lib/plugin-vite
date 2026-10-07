@@ -121,17 +121,20 @@ export function createWrappedComponentHMRStatements(componentName: string): t.St
 type VariableDeclaratorVisitor = (decl: t.VariableDeclarator) => void
 
 /**
- * 从函数体中收集局部变量名
- * 递归遍历函数体中的所有变量声明，用于状态恢复
+ * 从函数体中收集需要状态登记的局部变量名
+ * 递归遍历函数体中的所有变量声明，用于状态登记（trackState）；
+ * 函数类型的初始值（箭头函数/函数表达式/类表达式）不登记——快照时
+ * 读取 getter 会拿到函数值，一旦被误调用将执行组件内的业务函数
  * @param functionBody - 函数体语句块
  * @returns 变量名数组
  */
 export function collectLocalVariableNames(functionBody: t.BlockStatement): string[] {
   const variableNames = new Set<string>()
   forEachVariableDeclarator(functionBody, decl => {
-    if (decl.id.type !== 'VoidPattern') {
-      collectPatternBindings(decl.id, variableNames)
-    }
+    if (decl.id.type === 'VoidPattern') return
+    // 与 injectStatePreservationForDeclaration 的跳过规则保持一致
+    if (isFunctionExpression(decl.init ?? null)) return
+    collectPatternBindings(decl.id, variableNames)
   })
   return Array.from(variableNames)
 }

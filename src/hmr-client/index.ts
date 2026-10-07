@@ -132,7 +132,11 @@ export default class HMRManager {
     const snapshot: Record<string, any> = {}
     for (const name in getters) {
       try {
-        snapshot[name] = getters[name]()
+        const value = getters[name]()
+        // 防御：函数值（旧编译产物仍可能登记函数变量）不进入快照，
+        // 绝不调用组件内的业务函数
+        if (typeof value === 'function') continue
+        snapshot[name] = value
       } catch {
         // 单个变量读取失败（如暂时性死区）不影响其余状态恢复
       }

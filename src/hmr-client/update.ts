@@ -1,5 +1,6 @@
 import {
   Component,
+  ComponentInstance,
   ComponentView,
   createCommentView,
   EffectScope,
@@ -77,4 +78,9 @@ export function processUpdate(view: ComponentView, newComponent: Component): voi
   instance.subView.init(instance.subViewContext)
   // 挂载新的子树
   instance.subView.mount(placeholder, 'replace')
+  // 重执行期间组件函数可能重新注册 onMounted 等钩子（如文档级事件监听），
+  // 但此路径不经过组件实例的完整挂载流程（无人调用 instance.mounted()），
+  // 需手动触发，否则钩子永久滞留——表现为文档级监听丢失、需整页刷新恢复
+  // （mounted 为运行时类成员但公开类型未声明，此处窄化调用）
+  ;(instance as ComponentInstance & { mounted: () => void }).mounted()
 }

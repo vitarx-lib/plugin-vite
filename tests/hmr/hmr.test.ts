@@ -272,6 +272,17 @@ describe('HMR 协议结构', () => {
       )
     })
 
+    it('函数类型的局部变量不登记状态（避免快照误调用业务函数）', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        const navigate = (key) => router.push(key)
+        return <div onClick={() => navigate('x')}>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/get\s+count\(\)/)
+      expect(result).not.toMatch(/get\s+navigate\(\)/)
+    })
+
     it('保存对象解构变量', async () => {
       const code = `export const App = () => {
         const { a, b } = obj
