@@ -101,6 +101,73 @@ function createHotAcceptStatement(): t.Statement {
 }
 
 /**
+ * 创建导入转发模块的 hot.accept 语句（带 invalidate 兜底）
+ *
+ * 生成：import.meta.hot.accept(mod => {
+ *   if (!__$VITARX_HMR$__.instance.update(mod)) {
+ *     import.meta.hot.invalidate('[VitarxHMR]: ...')
+ *   }
+ * })
+ *
+ * 转发模块本身不含组件定义，update 的返回值表示新模块导出中是否
+ * 含已绑定 HMR id 的组件——为 false 说明转发目标不可识别（如换成
+ * 未转换模块的组件），必须 invalidate 整页刷新，避免界面静默 stale。
+ *
+ * 已知边界：转发目标在两个均有 HMR id 的组件间切换（export default A
+ * 改为 export default B）时，update 只登记 B 的 id 并返回 true，不会
+ * invalidate，挂在旧 id A 名下的视图不会被更新——文件路由场景由
+ * vitarx-router 虚拟路由模块自身的 hot accept 重建路由树兜底；非路由
+ * 场景需手动刷新。此为接受的降级路径，不做运行时检测。
+ * @returns hot.accept 调用语句
+ */
+function createForwardingHotAcceptStatement(): t.Statement {
+  return t.expressionStatement(
+    t.callExpression(
+      t.memberExpression(
+        t.memberExpression(
+          t.memberExpression(t.identifier('import'), t.identifier('meta')),
+          t.identifier('hot')
+        ),
+        t.identifier('accept')
+      ),
+      [
+        t.arrowFunctionExpression(
+          [t.identifier('mod')],
+          t.blockStatement([
+            t.ifStatement(
+              t.unaryExpression(
+                '!',
+                t.callExpression(
+                  t.memberExpression(
+                    t.memberExpression(t.identifier(HMR.manager), t.identifier('instance')),
+                    t.identifier('update')
+                  ),
+                  [t.identifier('mod')]
+                )
+              ),
+              t.blockStatement([
+                t.expressionStatement(
+                  t.callExpression(
+                    t.memberExpression(
+                      t.memberExpression(
+                        t.memberExpression(t.identifier('import'), t.identifier('meta')),
+                        t.identifier('hot')
+                      ),
+                      t.identifier('invalidate')
+                    ),
+                    [t.stringLiteral('[VitarxHMR]: 转发的默认导出不是可热更新的组件，回退整页刷新')]
+                  )
+                )
+              ])
+            )
+          ])
+        )
+      ]
+    )
+  )
+}
+
+/**
  * 生成组件唯一 ID（文件路径 + 组件名称）
  * 使用 FNV-1a 哈希算法生成短哈希值
  * @param filename - 文件路径
@@ -150,4 +217,18 @@ export function injectHMRSupport(
 
   // 步骤4: 创建 import.meta.hot.accept 语句（监听热更新事件）
   program.body.push(createHotAcceptStatement())
+}
+
+/**
+ * 为「导入转发组件默认导出」的模块注入 accept-only HMR 支持
+ *
+ * 典型场景：文件路由的 _layout 转发文件（export default AdminLayout）。
+ * 模块本身不含组件函数定义，无需 bindId 与函数体注入（函数体属于
+ * 源模块，其自身已有完整 HMR）；仅需自接受模块更新并把新导出交给
+ * HMRManager.update 按组件 id 热替换。
+ * @param program - AST Program 节点
+ */
+export function injectHMRAcceptOnly(program: t.Program): void {
+  injectHMRImport(program)
+  program.body.push(createForwardingHotAcceptStatement())
 }

@@ -2,6 +2,7 @@ import { Component, ComponentView, isComponent, isReactive, isRef } from 'vitarx
 import type { ModuleNamespace } from 'vite/types/hot.js'
 import { HMR } from '../constants/index.js'
 import { processUpdate } from './update.js'
+import { collectLiveViews, registerViewRef, type WeakRefLike } from './weak-refs.js'
 
 declare global {
   interface Window {
@@ -23,9 +24,16 @@ export default class HMRManager {
   /**
    * id模块映射到组件虚拟节点集合
    *
-   * 模块id -> 组件虚拟节点
+   * 模块id -> 组件虚拟节点（WeakRef 弱引用）
+   *
+   * 为什么用 WeakRef：register 在组件每次执行时都会调用，若用强引用，
+   * 已销毁的视图（弹窗关闭、路由切换）会被本 Map 永久钉住造成内存泄漏。
+   * WeakRef 借助 GC 可达性天然区分「Freeze 停用」与「真销毁」——
+   * Freeze 缓存持有视图强引用，停用中的视图不会被回收，热更新照常处理；
+   * 真销毁的视图无引用可回收，deref() 返回空，遍历时剪枝。
+   * 剪枝时机为 register/update 遍历（dev 下高频），泄漏上限极小。
    */
-  #idMapToView: Map<string, Set<ComponentView>> = new Map()
+  #idMapToView: Map<string, Set<WeakRefLike<ComponentView>>> = new Map()
   /**
    * id映射到组件构造函数
    */
@@ -107,10 +115,11 @@ export default class HMRManager {
     if (!view) return
     component ??= view.component
     const id = this.getId(component)
-    if (this.#idMapToView.has(id)) {
-      this.#idMapToView.get(id)!.add(view)
+    const refs = this.#idMapToView.get(id)
+    if (refs) {
+      registerViewRef(refs, view)
     } else {
-      this.#idMapToView.set(id, new Set([view]))
+      this.#idMapToView.set(id, new Set([new WeakRef(view)]))
     }
   }
   /**
@@ -163,9 +172,13 @@ export default class HMRManager {
    * 模块更新
    *
    * @param newModule - 新模块对象
+   * @returns 模块导出中是否包含至少一个已绑定 HMR id 的组件。
+   *          供导入转发模块的 accept 回调判断兜底：转发目标若不含
+   *          可识别组件（如换成未转换模块的组件），调用方应
+   *          invalidate 触发整页刷新，避免界面静默 stale。
    */
-  update(newModule: ModuleNamespace): void {
-    if (!newModule) return
+  update(newModule: ModuleNamespace): boolean {
+    if (!newModule) return false
     try {
       const components: Component[] = []
       const updatedView = new Set<ComponentView>()
@@ -185,9 +198,15 @@ export default class HMRManager {
       for (const component of components) {
         const id = this.getId(component)
         // 模块活跃的虚拟节点集合
-        const views = this.#idMapToView.get(id)
-        if (!views) continue
-        // 遍历关联的所有视图，使其更新
+        const refs = this.#idMapToView.get(id)
+        if (!refs) continue
+        // 收集存活视图（死引用已剪枝），遍历使其更新
+        const views = collectLiveViews(refs)
+        // 集合清空则移除 Map 条目，避免空壳残留长期积累
+        if (refs.size === 0) {
+          this.#idMapToView.delete(id)
+          continue
+        }
         for (const view of views) {
           // 跳过已更新过的视图，避免同一次更新中同一个视图被更新多次
           if (updatedView.has(view)) continue
@@ -208,6 +227,7 @@ export default class HMRManager {
           }
         }
       }
+      return components.length > 0
     } catch (e) {
       if (import.meta.hot) {
         import.meta.hot.invalidate(`[VitarxHMR]: ${e}`)
@@ -215,5 +235,6 @@ export default class HMRManager {
         throw e
       }
     }
+    return false
   }
 }

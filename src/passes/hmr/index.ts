@@ -3,4 +3,4 @@
  * @module passes/hmr
  */
 
-export { injectHMRSupport } from './inject.js'
+export { injectHMRSupport, injectHMRAcceptOnly } from './inject.js'

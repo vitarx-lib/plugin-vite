@@ -875,3 +875,62 @@ export default function DynamicList(): View {
     })
   })
 })
+
+describe('导入转发组件默认导出（_layout 转发文件）', () => {
+  const hmrOptions: CompileOptions = {
+    hmr: true,
+    dev: true,
+    ssr: false,
+    runtimeModule: 'vitarx',
+    sourceMap: false,
+    transformClassNameToClass: false
+  }
+
+  it('export default 导入绑定：注入 accept-only 自接受', async () => {
+    const code = `import AdminLayout from './admin-layout'
+export default AdminLayout`
+    const result = await compile(code, hmrOptions)
+    // 注入 HMR 客户端导入与自接受
+    expect(result).toContain('import __$VITARX_HMR$__ from "@vitarx/vite-plugin/hmr-client"')
+    expect(result).toContain('import.meta.hot.accept')
+    // 转发模块走 update 返回值判断 + invalidate 兜底
+    expect(result).toContain('__$VITARX_HMR$__.instance.update(mod)')
+    expect(result).toContain('import.meta.hot.invalidate')
+    // 不注入函数体级代码（组件定义属于源模块）
+    expect(result).not.toContain('bindId')
+    expect(result).not.toContain('instance.register')
+  })
+
+  it('export { X as default } 命名转发：同样注入 accept-only', async () => {
+    const code = `import AdminLayout from './admin-layout'
+export { AdminLayout as default }`
+    const result = await compile(code, hmrOptions)
+    expect(result).toContain('import.meta.hot.accept')
+    expect(result).toContain('__$VITARX_HMR$__.instance.update(mod)')
+    expect(result).not.toContain('bindId')
+  })
+
+  it('export default X as T 断言包装：解包后仍命中转发检测', async () => {
+    const code = `import AdminLayout from './admin-layout'
+export default AdminLayout as LayoutComponent`
+    const result = await compile(code, hmrOptions)
+    expect(result).toContain('import.meta.hot.accept')
+    expect(result).toContain('__$VITARX_HMR$__.instance.update(mod)')
+    expect(result).not.toContain('bindId')
+  })
+
+  it('转发非组件值（小写导入绑定）：不注入 HMR', async () => {
+    const code = `import { helper } from './helper'
+export default helper`
+    const result = await compile(code, hmrOptions)
+    expect(result).not.toContain('import.meta.hot.accept')
+    expect(result).not.toContain('@vitarx/vite-plugin/hmr-client')
+  })
+
+  it('普通无组件模块：不受转发检测影响', async () => {
+    const code = `import { helper } from './helper'
+export const value = helper()`
+    const result = await compile(code, hmrOptions)
+    expect(result).not.toContain('import.meta.hot.accept')
+  })
+})

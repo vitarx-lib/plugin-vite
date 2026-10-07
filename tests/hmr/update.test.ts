@@ -117,4 +117,47 @@ describe('processUpdate 统一重挂载语义（运行时契约）', () => {
     view.dispose()
     host.remove()
   })
+
+  it('update 返回值语义：模块含已绑定 id 的组件返回 true，否则 false', () => {
+    const manager = HMRManager.instance
+
+    // 无 id 组件：转发目标不可识别，调用方应 invalidate 兜底
+    const anonymous = (): string => 'no-id'
+    expect(manager.update({ Child: anonymous } as unknown as ModuleNamespace)).toBe(false)
+
+    // 已绑定 id 但无活跃视图（组件未挂载）：映射已刷新，仍算可识别
+    const bound = (): string => 'bound'
+    manager.bindId(bound, 'hmr-update-ret-bound-id')
+    expect(manager.update({ Child: bound } as unknown as ModuleNamespace)).toBe(true)
+
+    // 空模块/空值
+    expect(manager.update(undefined as unknown as ModuleNamespace)).toBe(false)
+  })
+
+  it('register 重复登记同一视图去重：update 仅触发一轮卸载重建', () => {
+    const probe = createProbe()
+    const ChildV1 = createChild('v1', probe)
+    HMRManager.instance.bindId(ChildV1, 'hmr-update-dedup-child')
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp(() => h('div'))
+    const view = render(ChildV1, host, { app })
+
+    // 模拟组件重复执行（每次执行都会 register 同一 view）：
+    // register 的真实视图来自组件上下文，这里再手动登记两次
+    const ChildV2 = createChild('v2', probe)
+    HMRManager.instance.bindId(ChildV2, 'hmr-update-dedup-child')
+    const activeView = view as unknown as Parameters<typeof HMRManager.instance.register>[0]
+    HMRManager.instance.register(activeView)
+    HMRManager.instance.register(activeView)
+
+    HMRManager.instance.update({ Child: ChildV2 } as unknown as ModuleNamespace)
+
+    // 若去重失效，同一视图会被多次 processUpdate，日志将出现成倍的 dispose/mounted
+    expect(probe.log).toEqual(['mounted:v1', 'dispose:v1', 'scopeDispose:v1', 'mounted:v2'])
+
+    view.dispose()
+    host.remove()
+  })
 })

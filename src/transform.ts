@@ -15,6 +15,7 @@ import {
   collectRefApiAliases,
   collectRefVariables,
   injectHMRSupport,
+  injectHMRAcceptOnly,
   injectImports,
   processJSXElement,
   processJSXFragment,
@@ -27,6 +28,7 @@ import {
   collectComponentFunctions,
   generateUniqueAlias,
   getJSXElementName,
+  hasForwardedComponentDefaultExport,
   isPureCompileComponent
 } from './utils/index.js'
 
@@ -200,8 +202,14 @@ export async function transform(
 
   injectImports(ast.program, ctx)
 
-  if (options.hmr && components.length > 0 && !isEntryFile(id)) {
-    injectHMRSupport(ast.program, components, id)
+  if (options.hmr && !isEntryFile(id)) {
+    if (components.length > 0) {
+      injectHMRSupport(ast.program, components, id)
+    } else if (hasForwardedComponentDefaultExport(ast.program)) {
+      // 导入转发组件默认导出的模块（如 _layout 转发文件）：无本地组件定义，
+      // 注入 accept-only 自接受，避免编辑时回落整页刷新
+      injectHMRAcceptOnly(ast.program)
+    }
   }
 
   return generateCode(ast, code, id, options.sourceMap)

@@ -31,4 +31,4 @@ export {
 export { processProps, type PropsResult } from './props/index.js'
 
 // HMR 注入
-export { injectHMRSupport } from './hmr/index.js'
+export { injectHMRSupport, injectHMRAcceptOnly } from './hmr/index.js'

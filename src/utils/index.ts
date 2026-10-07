@@ -60,5 +60,8 @@ export {
 // 组件收集
 export { collectComponentFunctions, type ComponentInfo } from './component-collect.js'
 
+// 导入转发默认导出检测
+export { hasForwardedComponentDefaultExport } from './forward-export.js'
+
 // 生成器
 export { generateUniqueAlias, generateUniqueDefaultName } from './generate.js'
