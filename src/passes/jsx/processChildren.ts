@@ -26,14 +26,21 @@ import {
 
 /**
  * 处理成员表达式
- * object 为简单标识符时使用 accessor（细粒度追踪）
- * object 为其他表达式（嵌套成员访问等）时降级为 expr（粗粒度追踪）
+ * 静态成员（obj.prop，computed=false）时使用 accessor（细粒度追踪），
+ * property 标识符即属性名，字符串化后作为 key；
+ * 计算成员（obj[keyExpr]，computed=true）时降级为 expr（粗粒度追踪）——
+ * accessor(obj, key) 的 key 在构建期一次求值，无法追踪 key 本身的变化，
+ * 且 key 为标识符时若误字符串化会读成 obj.key 改变语义（读取不存在的属性
+ * 渲染为空），必须保留动态求值语义。
  */
 function handleMemberExpression(
   expr: t.MemberExpression,
   ctx: TransformContext
 ): t.CallExpression | t.Expression {
-  if (isIdentifier(expr.object)) {
+  // key 静态（obj.prop 或 obj['prop']）才可 accessor：字符串字面量 key 原样
+  // 透传即为正确的静态 key；标识符（非计算成员）即属性名，由 accessor 构建器字符串化
+  const isStaticKey = !expr.computed || t.isStringLiteral(expr.property)
+  if (isStaticKey && isIdentifier(expr.object)) {
     markImport(ctx, 'accessor')
     const accessorAlias = getAlias(ctx.vitarxAliases, 'accessor')
     return createAccessorCall(expr.object, expr.property as t.Expression, accessorAlias)

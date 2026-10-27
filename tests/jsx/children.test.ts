@@ -179,13 +179,40 @@ describe('边界情况', () => {
     `)
   })
 
-  it('计算属性访问使用 accessor', async () => {
+  it('计算成员（动态 key）降级为 expr（保留动态求值语义）', async () => {
+    // 回归守卫：此前误编译为 accessor(obj, "key")——动态 key 标识符被
+    // 字符串化，读成 obj.key 改变语义（渲染为空）。key 必须动态求值，
+    // accessor 的 key 构建期一次求值无法承载，降级 expr 粗粒度追踪。
     const code = `const App = () => <div>{obj[key]}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => obj[key])
+      });"
+    `)
+  })
+
+  it('计算成员（字符串字面量 key）保持 accessor（key 静态）', async () => {
+    const code = `const App = () => <div>{obj['prop']}</div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, accessor } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: accessor(obj, "key")
+        children: accessor(obj, 'prop')
+      });"
+    `)
+  })
+
+  it('map 回调内的计算成员 children 保持动态求值（靓号池实踩场景）', async () => {
+    const code = `const App = () => <div>{items.map(type => <span>{LABELS[type]}</span>)}</div>`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, expr } from "vitarx";
+      const App = () => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */expr(() => items.map(type => /* @__PURE__ */createView("span", {
+          children: /* @__PURE__ */expr(() => LABELS[type])
+        })))
       });"
     `)
   })
