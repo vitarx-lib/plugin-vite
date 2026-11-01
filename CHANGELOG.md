@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.7...v1.0.8) (2026-11-01)
+
+
+### Features
+
+* **jsx:** 支持可选链子表达式的响应式延迟求值 ([83f1497](https://github.com/vitarx-lib/plugin-vite/commit/83f14974c1204d025ae3e2ccc93634418cebca36))
+
 ## [1.0.7](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.6...v1.0.7) (2026-10-27)
 
 ## [1.0.6](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.5...v1.0.6) (2026-10-07)
