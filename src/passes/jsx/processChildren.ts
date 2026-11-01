@@ -139,6 +139,11 @@ function processChildExpression(expr: t.Expression, ctx: TransformContext): t.Ex
     return handleMemberExpression(expr, ctx)
   }
 
+  // 可选链初始可能为空，必须延迟读取，才能在信号变化后重新建立依赖。
+  if (t.isOptionalMemberExpression(expr) || t.isOptionalCallExpression(expr)) {
+    return wrapWithExpr(expr, ctx)
+  }
+
   // 如果是条件表达式（如 ternary operator），递归处理条件表达式
   if (isConditionalExpression(expr)) {
     return processConditionalExpression(expr, ctx)
