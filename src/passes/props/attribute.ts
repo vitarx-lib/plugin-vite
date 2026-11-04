@@ -131,13 +131,15 @@ export function createProperty(
     return t.objectProperty(keyNode, value)
   }
 
+  // 绑定目标必须保留引用本身，成员访问和调用结果也不能按普通属性解包。
+  if (key === 'ref') {
+    return t.objectProperty(keyNode, value)
+  }
+
   // 如果是标识符（变量名）
   if (t.isIdentifier(value)) {
-    // 特殊处理 children 和 ref 属性：
-    // - children: ref 作为 children 是合法的可变渲染源，需保持引用本身
-    // - ref: ref 绑定需要 ref 对象本身，运行时通过 isRef() 判定后赋值 .value
-    //   若此处 unref/.value 解包，popProperty 取到解包值（如 null），isRef 失败
-    if (key === 'children' || key === 'ref') {
+    // children 允许 ref 作为可变渲染源，保持引用本身。
+    if (key === 'children') {
       return t.objectProperty(keyNode, value)
     }
     // 已知非 ref 变量（函数声明、箭头函数等）：静态分析确定非 ref，直接赋值无需 unref

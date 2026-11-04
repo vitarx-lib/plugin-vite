@@ -158,3 +158,25 @@ describe('回归测试：非 ref 属性仍正常解包', () => {
     expect(result).toContain('cls.value')
   })
 })
+
+/** 对象属性和调用结果同样是绑定目标，不得自动解包。 */
+describe('ref 表达式保持原始引用', () => {
+  it.each(['session.cropper', 'refs["cropper"]', 'getRef()', 'session?.cropper'])(
+    '%s 不生成 unref getter',
+    async (expression): Promise<void> => {
+      const result = await compile(`const App = () => <Widget ref={${expression}} />`)
+      expect(result).toContain(`"ref": ${expression}`)
+      expect(result).not.toContain('unref')
+      expect(result).not.toContain('get "ref"')
+    }
+  )
+
+  it('普通成员属性仍解包，ref 成员属性保留引用', async (): Promise<void> => {
+    const result = await compile(
+      'const App = () => <Widget ref={session.cropper} value={session.value} />'
+    )
+    expect(result).toContain('"ref": session.cropper')
+    expect(result).toContain('unref(session.value)')
+    expect(result).not.toContain('unref(session.cropper)')
+  })
+})
