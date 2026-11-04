@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.8...v1.0.9) (2026-11-04)
+
+
+### Bug Fixes
+
+* **props:** 保持 ref 绑定引用不被自动解包 ([053b2c1](https://github.com/vitarx-lib/plugin-vite/commit/053b2c1c10876a290c72cb77c43222c3abff6483))
+
 ## [1.0.8](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.7...v1.0.8) (2026-11-01)
 
 
