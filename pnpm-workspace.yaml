@@ -1,0 +1,5 @@
+# pnpm 新版将 settings 从 package.json 的 pnpm 字段迁移至此文件
+# allowBuilds：声明允许执行安装构建脚本的依赖（pnpm 11+ 取代 onlyBuiltDependencies）
+allowBuilds:
+  esbuild: true
+  node: true
