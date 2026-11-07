@@ -62,6 +62,27 @@ describe('Switch + Match', () => {
     expect(result).toContain('branch(() => 0')
   })
 
+  it('Match 支持表达式子节点并保留字面量空白', async () => {
+    const result = await compile(`const App = () => (
+      <Switch>
+        <Match when={ready}>{' 前后空格 '}</Match>
+        <Match when={show}>{ready ? <span /> : null}</Match>
+      </Switch>
+    )`)
+    expect(result).toMatch(/\(\) => ['"] 前后空格 ['"]/)
+    expect(result).toContain('createView("span"')
+  })
+
+  it('Match 支持文本与表达式混排并忽略 JSX 注释', async () => {
+    const result = await compile(`const App = () => (
+      <Switch>
+        <Match when={ready}>Progress {state.value}{/* 注释 */}<span /></Match>
+      </Switch>
+    )`)
+    expect(result).toContain('() => ["Progress ", accessor(state, "value"),')
+    expect(result).not.toContain('注释')
+  })
+
   describe('错误处理', () => {
     it('Match 不允许单独使用', async () => {
       const code = `const App = () => {

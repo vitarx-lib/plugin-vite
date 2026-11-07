@@ -11,9 +11,11 @@ import { createError } from '../../error.js'
 import {
   createArrowFunction,
   createBranch,
+  filterEffectiveChildren,
   getJSXAttributeByName,
   getJSXElementName
 } from '../../utils/index.js'
+import { processChildren } from '../jsx/processChildren.js'
 import { getAttributeValue } from '../props/attribute.js'
 
 /**
@@ -31,7 +33,7 @@ export function processSwitch(path: NodePath<t.JSXElement>, ctx: TransformContex
   const matchNodes = collectMatchNodes(children)
 
   // 构建条件和分支
-  const { conditions, branches } = buildConditionsAndBranches(matchNodes)
+  const { conditions, branches } = buildConditionsAndBranches(matchNodes, ctx)
 
   // 添加 fallback 分支
   if (fallbackValue) {
@@ -110,9 +112,13 @@ function collectMatchNodes(children: t.Node[]): t.JSXElement[] {
  * 该函数接收一个 JSX 元素数组，提取每个元素的 when 属性作为条件，
  * 并将子元素内容转换为对应的分支函数
  * @param matchNodes - JSX 元素数组，每个元素代表一个条件分支
+ * @param ctx - 转换上下文
  * @returns 返回一个对象，包含 conditions 条件数组和 branches 分支数组
  */
-function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
+function buildConditionsAndBranches(
+  matchNodes: t.JSXElement[],
+  ctx: TransformContext
+): {
   conditions: t.Expression[] // 条件表达式数组
   branches: t.ArrowFunctionExpression[] // 分支函数数组
 } {
@@ -135,28 +141,20 @@ function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
         : whenAttr.value // 否则直接使用值
     conditions.push(whenExpr) // 将条件添加到条件数组
 
-    // 提取分支内容，过滤掉空白文本节点
-    const matchChildren = matchNode.children.filter(c => !isJSXText(c) || c.value.trim())
+    const children = filterEffectiveChildren(matchNode)
+    if (children.length === 0) throw createError('E013', matchNode)
 
-    // 检查是否有子元素
-    if (matchChildren.length === 0) {
-      throw createError('E013', matchNode) // 如果没有子元素，抛出错误
+    // 单个纯文本分支保留原有的首尾去空白行为。
+    const first = children[0]
+    if (children.length === 1 && isJSXText(first)) {
+      branches.push(createArrowFunction(t.stringLiteral(first.value.trim())))
+      continue
     }
 
-    // 根据子元素数量创建不同的分支函数
-    if (matchChildren.length === 1) {
-      const child = matchChildren[0]
-      if (isJSXText(child)) {
-        // 如果是单个文本节点，创建返回字符串的函数
-        branches.push(createArrowFunction(t.stringLiteral(child.value.trim())))
-      } else {
-        // 如果是单个表达式节点，直接使用该表达式
-        branches.push(createArrowFunction(child as t.Expression))
-      }
-    } else {
-      // 如果有多个子元素，创建返回数组表达式的函数
-      branches.push(createArrowFunction(t.arrayExpression(matchChildren as t.Expression[])))
-    }
+    // 复用 JSX 子节点转换，解开表达式容器并保留分支内容的响应式更新。
+    const expressions = processChildren(children, ctx)
+    const body = expressions.length === 1 ? expressions[0] : t.arrayExpression(expressions)
+    branches.push(createArrowFunction(body))
   }
 
   return { conditions, branches } // 返回条件和分支数组
