@@ -1,3 +1,10 @@
+## [1.0.10](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.9...v1.0.10) (2026-11-07)
+
+
+### Features
+
+* **switch:** 支持 Match 表达式子节点和文本混排 ([00099db](https://github.com/vitarx-lib/plugin-vite/commit/00099dbaba8e28493708818a26b7ddd535d9d3c9))
+
 ## [1.0.9](https://github.com/vitarx-lib/plugin-vite/compare/v1.0.8...v1.0.9) (2026-11-04)
 
 
