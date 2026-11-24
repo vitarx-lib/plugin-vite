@@ -1,6 +1,6 @@
 ---
-name: "vitarx-development"
-description: "Guide for building apps with Vitarx (signal-driven JSX framework) and @vitarx/plugin-vite. Invoke when creating components, writing JSX, using directives (v-if/v-model/v-show), compile components (Switch/Match/IfBlock), or configuring the Vite plugin."
+name: 'vitarx-development'
+description: 'Guide for building apps with Vitarx (signal-driven JSX framework) and @vitarx/plugin-vite. Invoke when creating components, writing JSX, using directives (v-if/v-model/v-show), compile components (Switch/Match/IfBlock), or configuring the Vite plugin.'
 ---
 
 # Vitarx Development Guide
@@ -24,7 +24,7 @@ import vitarx from '@vitarx/plugin-vite'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  plugins: [vitarx()],  // or vitarx({ transformClassNameToClass: true })
+  plugins: [vitarx()], // or vitarx({ transformClassNameToClass: true })
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
   }
@@ -34,7 +34,7 @@ export default defineConfig({
 ### Plugin Options
 
 | Option                      | Type      | Default | Description                                                 |
-|-----------------------------|-----------|---------|-------------------------------------------------------------|
+| --------------------------- | --------- | ------- | ----------------------------------------------------------- |
 | `transformClassNameToClass` | `boolean` | `false` | Convert `className` to `class` on native HTML elements only |
 
 ### Entry File (main.tsx)
@@ -73,7 +73,7 @@ export default function Counter() {
 ### Lifecycle Hooks
 
 | Hook                  | Timing                   |
-|-----------------------|--------------------------|
+| --------------------- | ------------------------ |
 | `onInit(() => {})`    | Component initialization |
 | `onMounted(() => {})` | DOM mounted              |
 | `onDispose(() => {})` | Component destroyed      |
@@ -83,12 +83,14 @@ export default function Counter() {
 ```tsx
 import { ref, reactive, computed, watch, watchEffect } from 'vitarx'
 
-const count = ref(0)                    // Ref<T>
-const state = reactive({ items: [] })  // Reactive object
+const count = ref(0) // Ref<T>
+const state = reactive({ items: [] }) // Reactive object
 const doubled = computed(() => count.value * 2)
 
-watch(count, (newVal, oldVal) => {})   // Watch specific ref
-watchEffect(() => { console.log(count.value) })  // Auto-track deps
+watch(count, (newVal, oldVal) => {}) // Watch specific ref
+watchEffect(() => {
+  console.log(count.value)
+}) // Auto-track deps
 ```
 
 ## 3. JSX Compilation Rules (CRITICAL)
@@ -100,7 +102,7 @@ watchEffect(() => { console.log(count.value) })  // Auto-track deps
 The compiler uses **static analysis** to determine how to unwrap identifiers:
 
 | Expression      | Condition                | Compiled Output                                |
-|-----------------|--------------------------|------------------------------------------------|
+| --------------- | ------------------------ | ---------------------------------------------- |
 | `x={count}`     | Known `ref` variable     | `get x() { return count.value }`               |
 | `x={count}`     | Known non-ref (function) | `"x": count` (static assignment)               |
 | `x={count}`     | Unknown identifier       | `get x() { return unref(count) }`              |
@@ -135,7 +137,7 @@ const show = ref(false)
 ### 3.2 Children Expressions
 
 | Expression                     | Compiled As                         |
-|--------------------------------|-------------------------------------|
+| ------------------------------ | ----------------------------------- |
 | `{value}` (identifier)         | Passed as-is, runtime handles ref   |
 | `{props.value}` (member)       | `accessor(props, 'value')`          |
 | `{show ? 'a' : 'b'}` (ternary) | `branch(() => show ? 0 : 1, [...])` |
@@ -146,6 +148,7 @@ const show = ref(false)
 ### 3.3 Special Props (NOT Unwrapped)
 
 These props bypass ref unwrapping:
+
 - `children={refVar}` — runtime handles ref children
 - `ref={refVar}` — ref binding needs the ref object itself
 
@@ -171,14 +174,40 @@ const name = ref('')
 ```
 
 Compiles to:
+
 ```javascript
 createView(Input, {
-  get modelValue() { return name.value },
-  'onUpdate:modelValue': v => { name.value = v }
+  get modelValue() {
+    return name.value
+  },
+  'onUpdate:modelValue': v => {
+    name.value = v
+  }
 })
 ```
 
-**Requirements**: v-model value must be an identifier that is a known `ref`, or a member expression like `obj.key` where the property is a ref.
+**Requirements**: v-model value must be an identifier that is a known `ref`, or a member expression like `obj.key` where the property may be a ref.
+
+Member expressions compile with runtime ref detection — the property may hold a ref (e.g. `state.draft = ref('')`) or a plain value:
+
+```tsx
+<Input v-model={state.draft} />
+```
+
+Compiles to:
+
+```javascript
+createView(Input, {
+  get modelValue() {
+    return unref(state.draft)
+  },
+  'onUpdate:modelValue': v => {
+    // ref stored in the property: write ref.value (assignment would replace the ref)
+    if (isRef(state.draft)) state.draft.value = v
+    else state.draft = v
+  }
+})
+```
 
 ### v-show
 
@@ -211,6 +240,7 @@ Like JavaScript `switch`, compiles to `branch()`:
 ```
 
 **Rules**:
+
 - `Match` must be inside `Switch`
 - `Match` must have a `when` prop
 - `Switch` must have at least one `Match` child
@@ -294,7 +324,7 @@ export default function App() {
 }
 
 // Navigation
-<RouterLink to="home">Home</RouterLink>
+;<RouterLink to="home">Home</RouterLink>
 ```
 
 ## 9. HMR (Hot Module Replacement)
@@ -302,6 +332,7 @@ export default function App() {
 HMR is automatically injected for exported components in dev mode. No configuration needed.
 
 **HMR identification rules** — a function gets HMR if:
+
 1. Name starts with uppercase (component naming convention)
 2. Is exported (`export`)
 3. Contains JSX or returns compile-time components
@@ -372,7 +403,7 @@ const items = ref([{ id: 1, name: 'A' }, { id: 2, name: 'B' }])
 ## 11. Error Codes
 
 | Code | Description                                           |
-|------|-------------------------------------------------------|
+| ---- | ----------------------------------------------------- |
 | E001 | Invalid JSX attribute value                           |
 | E002 | Invalid v-model value                                 |
 | E003 | v-else without preceding v-if                         |

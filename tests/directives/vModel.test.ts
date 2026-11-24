@@ -22,12 +22,18 @@ describe('v-model 指令', () => {
     const code = `const App = () => <Input v-model={data.value} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref, isRef } from "vitarx";
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {
-          return data.value;
+          return unref(data.value);
         },
-        "onUpdate:modelValue": v => data.value = v
+        "onUpdate:modelValue": v => {
+          if (isRef(data.value)) {
+            data.value.value = v;
+          } else {
+            data.value = v;
+          }
+        }
       });"
     `)
   })
@@ -36,12 +42,18 @@ describe('v-model 指令', () => {
     const code = `const App = () => <Input v-model={arr[0]} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref, isRef } from "vitarx";
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {
-          return arr[0];
+          return unref(arr[0]);
         },
-        "onUpdate:modelValue": v => arr[0] = v
+        "onUpdate:modelValue": v => {
+          if (isRef(arr[0])) {
+            arr[0].value = v;
+          } else {
+            arr[0] = v;
+          }
+        }
       });"
     `)
   })
@@ -50,12 +62,38 @@ describe('v-model 指令', () => {
     const code = `const App = () => <Input v-model={props.data.value} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { createView } from "vitarx";
+      "import { createView, unref, isRef } from "vitarx";
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {
-          return props.data.value;
+          return unref(props.data.value);
         },
-        "onUpdate:modelValue": v => props.data.value = v
+        "onUpdate:modelValue": v => {
+          if (isRef(props.data.value)) {
+            props.data.value.value = v;
+          } else {
+            props.data.value = v;
+          }
+        }
+      });"
+    `)
+  })
+
+  it('v-model 绑定存于对象属性的 ref（回写 ref.value 而非替换属性）', async () => {
+    const code = `const App = () => <Input v-model={state.draft} />`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { createView, unref, isRef } from "vitarx";
+      const App = () => /* @__PURE__ */createView(Input, {
+        get modelValue() {
+          return unref(state.draft);
+        },
+        "onUpdate:modelValue": v => {
+          if (isRef(state.draft)) {
+            state.draft.value = v;
+          } else {
+            state.draft = v;
+          }
+        }
       });"
     `)
   })

@@ -66,8 +66,8 @@ export function createVModelProps(
     return createIdentifierVModelProps(value, attrNode || node, ctx)
   }
 
-  // MemberExpression: 直接访问属性
-  return createMemberExpressionVModelProps(value)
+  // MemberExpression: 属性可能是 ref 也可能是普通值，读取与回写均需运行时判定
+  return createMemberExpressionVModelProps(value, ctx)
 }
 
 /**
@@ -166,27 +166,56 @@ function createIdentifierVModelProps(
 
 /**
  * 为 MemberExpression 类型的 v-model 值创建 props
- * 直接访问对象属性，无需 ref 处理
- * @param value - MemberExpression 值
+ *
+ * 属性可能存放 ref（如 `state.draft = ref('')`）也可能是普通值，编译期无法
+ * 静态判定，因此读取经 unref 解包（与普通属性编译语义一致，属性为 ref 时
+ * 读取其 value 且保持响应式追踪），回写由运行时 isRef 判定：ref 写其
+ * value（整体赋值会替换掉属性上的 ref，导致闭包持有的 ref 永不更新），
+ * 普通值保持直接赋值不变。
+ *
+ * @param value - 成员表达式值
+ * @param ctx - 转换上下文
  * @returns 属性数组
  */
 function createMemberExpressionVModelProps(
-  value: t.MemberExpression
+  value: t.MemberExpression,
+  ctx: TransformContext
 ): (t.ObjectMethod | t.ObjectProperty)[] {
+  markImport(ctx, 'unref')
+  const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
+  markImport(ctx, 'isRef')
+  const isRefAlias = getAlias(ctx.vitarxAliases, 'isRef')
+  // 同一成员表达式在 getter、isRef 判定与两处赋值中重复出现，克隆节点避免
+  // 多处插入共享同一 AST 对象被后续转换互相影响
+  const checkTarget = t.cloneNode(value)
+  const refWriteTarget = t.memberExpression(t.cloneNode(value), t.identifier('value'))
+  const plainWriteTarget = t.cloneNode(value)
   return [
-    // modelValue getter: 直接返回表达式
+    // modelValue getter: 返回 unref(obj.prop)
     t.objectMethod(
       'get',
       t.identifier('modelValue'),
       [],
-      t.blockStatement([t.returnStatement(value)])
+      t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))])
     ),
-    // onUpdate:modelValue: v => obj.prop = v
+    // onUpdate:modelValue: v => { if (isRef(obj.prop)) obj.prop.value = v; else obj.prop = v }
     t.objectProperty(
       t.stringLiteral('onUpdate:modelValue'),
       t.arrowFunctionExpression(
         [t.identifier('v')],
-        t.assignmentExpression('=', value, t.identifier('v'))
+        t.blockStatement([
+          t.ifStatement(
+            t.callExpression(t.identifier(isRefAlias), [checkTarget]),
+            t.blockStatement([
+              t.expressionStatement(t.assignmentExpression('=', refWriteTarget, t.identifier('v')))
+            ]),
+            t.blockStatement([
+              t.expressionStatement(
+                t.assignmentExpression('=', plainWriteTarget, t.identifier('v'))
+              )
+            ])
+          )
+        ])
       )
     )
   ]
